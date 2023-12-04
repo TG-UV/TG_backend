@@ -1,7 +1,9 @@
 # TG_backend
+
 Django backend
 
 ## Configuración inicial:
+
 Instalar virutalenv:
 `pip install virtualenv`
 
@@ -21,6 +23,7 @@ Luego, dentro del venv ejecutar:
 Pegar el archivo .env en la carpeta raíz.
 
 ### Para correr la aplicación:
+
 En Visual Studio Code presioanr F1> Seleccionar interprete > venv.
 
 Luego, dentro del venv ejecutar:
@@ -29,3 +32,9 @@ Luego, dentro del venv ejecutar:
 Luego:
 `python manage.py runserver`
 
+
+### Para actualizar los modelos de datos:
+`python manage.py makemigrations`
+
+Luego:
+`python manage.py migrate`
