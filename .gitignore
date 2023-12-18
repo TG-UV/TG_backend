@@ -13,6 +13,7 @@ local_settings.py
 *.sqlite3
 staticfiles/
 logs/
+migrations/
 
 # env 
 .env

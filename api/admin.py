@@ -1,5 +1,16 @@
 from django.contrib import admin
-from .models import Driver, Passenger, VehicleColor, VehicleBrand, VehicleType, VehicleModel, Vehicle, Admin, Trip, PassangerTrip
+from .models import (
+    Driver,
+    Passenger,
+    VehicleColor,
+    VehicleBrand,
+    VehicleType,
+    VehicleModel,
+    Vehicle,
+    Admin,
+    Trip,
+    PassangerTrip,
+)
 
 # Register your models here.
 admin.site.register(Driver)
