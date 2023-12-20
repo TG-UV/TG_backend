@@ -91,13 +91,14 @@ class Trip(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     start_date = models.DateField()
     start_time = models.TimeField()
-    description = models.CharField(max_length=255)
-    fare_per_passenger = models.IntegerField()
-    route = models.TextField()
-    toUniversity = models.BooleanField(default=True)
+    starting_point = models.CharField(max_length=255)
+    arrival_point = models.CharField(max_length=255)
+    seats = models.IntegerField()
+    fare = models.IntegerField()
+    current_trip = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Trip {self.id_trip}"
+        return f"Trip #{self.id_trip}"
 
 
 class PassangerTrip(models.Model):
