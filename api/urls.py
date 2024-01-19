@@ -29,6 +29,6 @@ router.register('api/PassangerTrip', PassangerTripViewSet, 'PassangerTrip')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('hello', views.hello_view, name='hello'),
+    path('api/hello', views.hello_view, name='hello'),
     ##path('api/signin', views.signin)
 ]

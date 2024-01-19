@@ -15,7 +15,7 @@ from .models import (
 
 
 # Convierte los modelo a JSON para las peticiones
-class UserRegistrationSerializer(serializers.ModelSerializer):
+'''class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = '__all__'
@@ -41,7 +41,7 @@ class UserLoginSerializer(serializers.Serializer):
 	email = serializers.CharField()
 	password = serializers.CharField()
 	token = serializers.CharField(read_only=True)
-
+'''
 
 class DriverSerializer(serializers.ModelSerializer):
     class Meta:
