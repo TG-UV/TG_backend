@@ -1,33 +1,75 @@
 from django.db import models
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
+
 
 # Create your models here.
+class UserManager(BaseUserManager):
+    def create_user(self, email, password, **kwargs):
+        if not email:
+            raise ValueError('Se requiere un email')
+
+        if not password:
+            raise ValueError('Se requiere una contraseña')
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **kwargs)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self, email, password, **kwargs):
+        user = self.create_user(email, password, **kwargs)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+
+        return user
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    id_user = models.AutoField(primary_key=True)
+    email = models.EmailField(unique=True)
+    identity_document = models.CharField(max_length=10)
+    phone_number = models.CharField(max_length=10)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    registration_date = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = [
+        'identity_document',
+        'phone_number',
+        'first_name',
+        'last_name',
+    ]
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
 
 
 class Driver(models.Model):
-    id = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=10)
-    birth_date = models.DateField()
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    vehicle_id = models.CharField(max_length=50, blank=True)
-    registration_date = models.DateTimeField(auto_now_add=True)
+    id_driver = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"Conductor {self.id_driver} es {self.user_id}"
 
 
 class Passenger(models.Model):
     id_passenger = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=10)
-    birth_date = models.DateField()
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    registration_date = models.DateTimeField(auto_now_add=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"Pasajero {self.id_passenger} es {self.user_id}"
 
 
 class VehicleColor(models.Model):
@@ -74,16 +116,13 @@ class Vehicle(models.Model):
         return f"{self.vehicle_brand} {self.vehicle_model} - {self.license_plate}"
 
 
-class Admin(models.Model):
-    id_admin = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=10)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    registration_date = models.DateTimeField(auto_now_add=True)
+class Driver_Vehicle(models.Model):
+    id_driver_vehicle = models.AutoField(primary_key=True)
+    driver_id = models.ForeignKey(Driver, on_delete=models.CASCADE)
+    vehicle_id = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"Conductor {self.driver_id} tiene vehículo {self.vehicle_id}"
 
 
 class Trip(models.Model):
@@ -106,6 +145,7 @@ class PassangerTrip(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
     pickup_point = models.CharField(max_length=255)
+    is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Passanger on the Trip {self.id_passanger_trip}"
