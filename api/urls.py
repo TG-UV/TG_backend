@@ -16,19 +16,19 @@ from .api import (
 
 router = routers.DefaultRouter()
 
-router.register('Driver', DriverViewSet, 'Driver')
-router.register('Passenger', PassengerViewSet, 'Passenger')
-router.register('VehicleColor', VehicleColorViewSet, 'VehicleColor')
-router.register('VehicleBrand', VehicleBrandViewSet, 'VehicleBrand')
-router.register('VehicleType', VehicleTypeViewSet, 'VehicleType')
-router.register('VehicleModel', VehicleModelViewSet, 'VehicleModel')
-router.register('Vehicle', VehicleViewSet, 'Vehicle')
-router.register('Driver_Vehicle', Driver_VehicleViewSet, 'Driver_Vehicle')
-router.register('Trip', TripViewSet, 'Trip')
-router.register('PassangerTrip', PassangerTripViewSet, 'PassangerTrip')
+router.register('api/Driver', DriverViewSet, 'Driver')
+router.register('api/Passenger', PassengerViewSet, 'Passenger')
+router.register('api/VehicleColor', VehicleColorViewSet, 'VehicleColor')
+router.register('api/VehicleBrand', VehicleBrandViewSet, 'VehicleBrand')
+router.register('api/VehicleType', VehicleTypeViewSet, 'VehicleType')
+router.register('api/VehicleModel', VehicleModelViewSet, 'VehicleModel')
+router.register('api/Vehicle', VehicleViewSet, 'Vehicle')
+router.register('api/Driver_Vehicle', Driver_VehicleViewSet, 'Driver_Vehicle')
+router.register('api/Trip', TripViewSet, 'Trip')
+router.register('api/PassangerTrip', PassangerTripViewSet, 'PassangerTrip')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('hello', views.hello_view, name='hello'),
+    path('api/hello', views.hello_view, name='hello'),
     ##path('api/signin', views.signin)
 ]

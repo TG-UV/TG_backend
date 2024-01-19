@@ -39,6 +39,9 @@ def hello_view(request):
     content = {
         'message': 'Hello, World!',
         'user': str(request.user), 
+        'is_admin?': str(request.user.is_staff),
+        'is_superuser?': str(request.user.is_superuser),
+        'password?': str(request.user.password),
         'auth': str(request.auth),
     }
     return Response(content)
