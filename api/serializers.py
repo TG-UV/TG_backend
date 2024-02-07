@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from .models import (
+    User,
     Driver,
     Passenger,
     VehicleColor,
@@ -10,19 +10,20 @@ from .models import (
     Vehicle,
     Driver_Vehicle,
     Trip,
-    PassangerTrip,
+    Passenger_Trip,
 )
 
 
 # Convierte los modelo a JSON para las peticiones
-'''class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
+        model = User
         fields = '__all__'
-        read_only_fields = ('id_user', 'registration_date')
+        read_only_fields = ('id_user', 'registration_date', 'last_login')
+        extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver
 
     def create(self, validated_data):
-        user = get_user_model().objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
 
         return user
 
@@ -36,12 +37,6 @@ from .models import (
 
         return user
 
-
-class UserLoginSerializer(serializers.Serializer):
-	email = serializers.CharField()
-	password = serializers.CharField()
-	token = serializers.CharField(read_only=True)
-'''
 
 class DriverSerializer(serializers.ModelSerializer):
     class Meta:
@@ -106,8 +101,8 @@ class TripSerializer(serializers.ModelSerializer):
         read_only_fields = ('id_trip',)
 
 
-class PassangerTripSerializer(serializers.ModelSerializer):
+class Passenger_TripSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PassangerTrip
+        model = Passenger_Trip
         fields = '__all__'
-        read_only_fields = ('id_passanger_trip',)
+        read_only_fields = ('id_passenger_trip',)

@@ -1,5 +1,6 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, generics
 from .serializers import (
+    UserSerializer,
     DriverSerializer,
     PassengerSerializer,
     VehicleColorSerializer,
@@ -9,9 +10,10 @@ from .serializers import (
     VehicleSerializer,
     Driver_VehicleSerializer,
     TripSerializer,
-    PassangerTripSerializer,
+    Passenger_TripSerializer,
 )
 from .models import (
+    User,
     Driver,
     Passenger,
     VehicleColor,
@@ -21,8 +23,14 @@ from .models import (
     Vehicle,
     Driver_Vehicle,
     Trip,
-    PassangerTrip,
+    Passenger_Trip,
 )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
 
 
 class DriverViewSet(viewsets.ModelViewSet):
@@ -79,7 +87,7 @@ class TripViewSet(viewsets.ModelViewSet):
     serializer_class = TripSerializer
 
 
-class PassangerTripViewSet(viewsets.ModelViewSet):
-    queryset = PassangerTrip.objects.all()
+class Passenger_TripViewSet(viewsets.ModelViewSet):
+    queryset = Passenger_Trip.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = PassangerTripSerializer
+    serializer_class = Passenger_TripSerializer

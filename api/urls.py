@@ -2,6 +2,7 @@ from rest_framework import routers
 from django.urls import path, include
 from api import views
 from .api import (
+    UsersViewSet,
     DriverViewSet,
     PassengerViewSet,
     VehicleColorViewSet,
@@ -11,24 +12,25 @@ from .api import (
     VehicleViewSet,
     Driver_VehicleViewSet,
     TripViewSet,
-    PassangerTripViewSet,
+    Passenger_TripViewSet,
 )
 
 router = routers.DefaultRouter()
 
-router.register('api/Driver', DriverViewSet, 'Driver')
-router.register('api/Passenger', PassengerViewSet, 'Passenger')
-router.register('api/VehicleColor', VehicleColorViewSet, 'VehicleColor')
-router.register('api/VehicleBrand', VehicleBrandViewSet, 'VehicleBrand')
-router.register('api/VehicleType', VehicleTypeViewSet, 'VehicleType')
-router.register('api/VehicleModel', VehicleModelViewSet, 'VehicleModel')
-router.register('api/Vehicle', VehicleViewSet, 'Vehicle')
-router.register('api/Driver_Vehicle', Driver_VehicleViewSet, 'Driver_Vehicle')
-router.register('api/Trip', TripViewSet, 'Trip')
-router.register('api/PassangerTrip', PassangerTripViewSet, 'PassangerTrip')
+router.register('Users', UsersViewSet, 'Users')
+router.register('Driver', DriverViewSet, 'Driver')
+router.register('Passenger', PassengerViewSet, 'Passenger')
+router.register('VehicleColor', VehicleColorViewSet, 'VehicleColor')
+router.register('VehicleBrand', VehicleBrandViewSet, 'VehicleBrand')
+router.register('VehicleType', VehicleTypeViewSet, 'VehicleType')
+router.register('VehicleModel', VehicleModelViewSet, 'VehicleModel')
+router.register('Vehicle', VehicleViewSet, 'Vehicle')
+router.register('Driver_Vehicle', Driver_VehicleViewSet, 'Driver_Vehicle')
+router.register('Trip', TripViewSet, 'Trip')
+router.register('Passenger_Trip', Passenger_TripViewSet, 'Passenger_Trip')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('api/hello', views.hello_view, name='hello'),
-    ##path('api/signin', views.signin)
+    path('ListUsers', views.ListUsersView.as_view(), name='ListUsers'),
+    path('HomePassenger', views.home_passenger, name='HomePassenger'),
 ]
