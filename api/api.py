@@ -1,6 +1,6 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, permissions
 from .serializers import (
-    UserSerializer,
+    SuperuserSerializer,
     DriverSerializer,
     PassengerSerializer,
     VehicleColorSerializer,
@@ -27,10 +27,10 @@ from .models import (
 )
 
 
-class UsersViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+class SuperuserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
+    serializer_class = SuperuserSerializer
 
 
 class DriverViewSet(viewsets.ModelViewSet):

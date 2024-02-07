@@ -1,20 +1,35 @@
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics, permissions, authentication
 from rest_framework.decorators import api_view, permission_classes
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer
+from .serializers import SuperuserSerializer
 from .models import User
 
 
 # Vistas para admins
 # Listar todos los usuarios
 class ListUsersView(generics.ListAPIView):
-    serializer_class = UserSerializer
+    serializer_class = SuperuserSerializer
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
+
+class CreateSuperuserView(generics.CreateAPIView):
+    serializer_class = SuperuserSerializer
+
+class UpdateSuperuserView(generics.RetrieveUpdateAPIView):
+    serializer_class = SuperuserSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+'''
+class CreateTokenView(ObtainAuthToken):
+    serializer_class = AuthTokenSerializer'''
 
 
 # Vistas para pasajeros

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth import authenticate
 from .models import (
     User,
     Driver,
@@ -13,17 +14,38 @@ from .models import (
     Passenger_Trip,
 )
 
+'''
+class AuthTokenSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
 
-# Convierte los modelo a JSON para las peticiones
-class UserSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        user = authenticate(
+            request=self.context.get('request'), username=email, password=password
+        )
+
+        if not user:
+            raise serializers.ValidationError(
+                'No se pudo autenticar', code='authorization'
+            )
+
+        attrs['user'] = user
+        return attrs
+'''
+
+
+# Convierte los modelo a JSON para las peticiones.
+class SuperuserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
         read_only_fields = ('id_user', 'registration_date', 'last_login')
-        extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver
+        extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver.
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        user = User.objects.create_superuser(**validated_data)
 
         return user
 
