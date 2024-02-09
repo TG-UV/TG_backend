@@ -2,7 +2,7 @@ from rest_framework import routers
 from django.urls import path, include
 from api import views
 from .api import (
-    SuperuserViewSet,
+    UserCustomViewSet,
     DriverViewSet,
     PassengerViewSet,
     VehicleColorViewSet,
@@ -17,7 +17,7 @@ from .api import (
 
 router = routers.DefaultRouter()
 
-router.register('superuser', SuperuserViewSet, 'Superuser')
+router.register('user', UserCustomViewSet, 'UserCustom')
 router.register('driver', DriverViewSet, 'Driver')
 router.register('passenger', PassengerViewSet, 'Passenger')
 router.register('vehicleColor', VehicleColorViewSet, 'VehicleColor')
@@ -30,13 +30,12 @@ router.register('trip', TripViewSet, 'Trip')
 router.register('passenger_trip', Passenger_TripViewSet, 'Passenger_Trip')
 
 urlpatterns = [
+    path('users/list', views.ListUsersView.as_view(), name='ListUsers'),
+    # path(
+    #    'create_superuser/', views.CreateSuperuserView.as_view(), name='CreateSuperuser'
+    # ),
+    # path('update_user/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'),
+    path('passenger/home/', views.home_passenger, name='HomePassenger'),
+    path('passenger/register/', views.passenger_register, name='RegisterPassenger'),
     path('', include(router.urls)),
-    path('list_users/', views.ListUsersView.as_view(), name='ListUsers'),
-    path('home_passenger/', views.home_passenger, name='HomePassenger'),
-    path(
-        'create_superuser/', views.CreateSuperuserView.as_view(), name='CreateSuperuser'
-    ),
-    path(
-        'update_superuser/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'
-    ),
 ]

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from djoser.serializers import UserSerializer
 from .models import (
     User,
     Driver,
@@ -13,6 +14,7 @@ from .models import (
     Trip,
     Passenger_Trip,
 )
+
 
 '''
 class AuthTokenSerializer(serializers.Serializer):
@@ -37,15 +39,28 @@ class AuthTokenSerializer(serializers.Serializer):
 
 
 # Convierte los modelo a JSON para las peticiones.
-class SuperuserSerializer(serializers.ModelSerializer):
+class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = (
+            'id_user',
+            'email',
+            'identity_document',
+            'phone_number',
+            'first_name',
+            'last_name',
+            'password',
+            'registration_date',
+            'last_login',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+        )
         read_only_fields = ('id_user', 'registration_date', 'last_login')
         extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver.
 
     def create(self, validated_data):
-        user = User.objects.create_superuser(**validated_data)
+        user = User.objects.create_user(**validated_data)
 
         return user
 
