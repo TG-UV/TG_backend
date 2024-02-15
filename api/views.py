@@ -4,8 +4,8 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
-from .serializers import UserCustomSerializer
-from .models import User
+from .serializers import UserCustomSerializer, CitySerializer
+from .models import User, City
 
 
 # Admins
@@ -40,27 +40,16 @@ class CreateTokenView(ObtainAuthToken):
 # Vistas de registro
 
 
-# Registrar pasajero
-'''@api_view(["POST"])
+# Obtener datos para el registro
+@api_view(["GET"])
 @permission_classes([permissions.AllowAny])
-def passenger_register(request):
-    user_serializer = UserCustomSerializer(data=request.data)
-    if user_serializer.is_valid():
-        user = user_serializer.save()  # Crea el usuario
-        passenger_data = {'user_id': str(user.id_user)}
-        passenger_serializer = PassengerSerializer(data=passenger_data)
+def registration(request):
+    cities = City.objects.all()
+    serializer = CitySerializer(cities, many=True)
+    content = serializer.data
+    return Response(content, status=status.HTTP_200_OK)
 
-        if passenger_serializer.is_valid():
-            passenger = passenger_serializer.save()  # Crea el pasajero
-            content = user_serializer.data
-            content['id_passenger'] = str(passenger.id_passenger)
-            return Response(content, status=status.HTTP_201_CREATED)
 
-        return Response(passenger_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-'''
 # Conductores
 
 
@@ -79,7 +68,8 @@ def home_driver(request):
 
     except User.DoesNotExist:
         return Response(
-            {'error': 'No existe conductor con ese id'}, status=status.HTTP_400_BAD_REQUEST
+            {'error': 'No existe conductor con ese id'},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 
@@ -101,7 +91,8 @@ def home_passenger(request):
 
     except User.DoesNotExist:
         return Response(
-            {'error': 'No existe pasajero con ese id'}, status=status.HTTP_400_BAD_REQUEST
+            {'error': 'No existe pasajero con ese id'},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 

@@ -33,6 +33,7 @@ urlpatterns = [
     #    'create_superuser/', views.CreateSuperuserView.as_view(), name='CreateSuperuser'
     # ),
     # path('update_user/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'),
+    path('user/registration/', views.registration, name='Registration'),
     path('driver/home/', views.home_driver, name='HomeDriver'),
     path('passenger/home/', views.home_passenger, name='HomePassenger'),
     path('', include(router.urls)),
