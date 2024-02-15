@@ -7,7 +7,7 @@ from .serializers import (
     VehicleTypeSerializer,
     VehicleModelSerializer,
     VehicleSerializer,
-    AdminSerializer,
+    Driver_VehicleSerializer,
     TripSerializer,
     PassangerTripSerializer,
 )
@@ -19,7 +19,7 @@ from .models import (
     VehicleType,
     VehicleModel,
     Vehicle,
-    Admin,
+    Driver_Vehicle,
     Trip,
     PassangerTrip,
 )
@@ -67,10 +67,10 @@ class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
 
 
-class AdminViewSet(viewsets.ModelViewSet):
-    queryset = Admin.objects.all()
+class Driver_VehicleViewSet(viewsets.ModelViewSet):
+    queryset = Driver_Vehicle.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = AdminSerializer
+    serializer_class = Driver_VehicleSerializer
 
 
 class TripViewSet(viewsets.ModelViewSet):
