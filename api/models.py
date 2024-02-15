@@ -55,8 +55,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField()
     registration_date = models.DateTimeField(auto_now_add=True)
-    residence_city = models.ForeignKey(City, on_delete=models.CASCADE, null=True)
-    type = models.ForeignKey(UserType, on_delete=models.CASCADE, null=True)
+    residence_city = models.ForeignKey(City, on_delete=models.CASCADE)
+    type = models.ForeignKey(UserType, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
