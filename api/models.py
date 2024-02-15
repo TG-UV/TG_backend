@@ -6,7 +6,6 @@ from django.contrib.auth.models import (
 )
 
 
-# Create your models here.
 class UserManager(BaseUserManager):
     def create_user(self, email, password, **kwargs):
         if not email:
@@ -18,7 +17,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **kwargs)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
 
         return user
 
@@ -26,7 +25,7 @@ class UserManager(BaseUserManager):
         user = self.create_user(email, password, **kwargs)
         user.is_staff = True
         user.is_superuser = True
-        user.save(using=self._db)
+        user.save()
 
         return user
 
@@ -140,12 +139,12 @@ class Trip(models.Model):
         return f"Trip #{self.id_trip}"
 
 
-class PassangerTrip(models.Model):
-    id_passanger_trip = models.AutoField(primary_key=True)
+class Passenger_Trip(models.Model):
+    id_passenger_trip = models.AutoField(primary_key=True)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE)
     pickup_point = models.CharField(max_length=255)
     is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Passanger on the Trip {self.id_passanger_trip}"
+        return f"Id: {self.id_passenger_trip} Pasajero {self.passenger} en el viaje {self.trip}"

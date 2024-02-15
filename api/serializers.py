@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
+from djoser.serializers import UserSerializer
 from .models import (
+    User,
     Driver,
     Passenger,
     VehicleColor,
@@ -10,19 +12,55 @@ from .models import (
     Vehicle,
     Driver_Vehicle,
     Trip,
-    PassangerTrip,
+    Passenger_Trip,
 )
 
 
-# Convierte los modelo a JSON para las peticiones
-'''class UserRegistrationSerializer(serializers.ModelSerializer):
+'''
+class AuthTokenSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        user = authenticate(
+            request=self.context.get('request'), username=email, password=password
+        )
+
+        if not user:
+            raise serializers.ValidationError(
+                'No se pudo autenticar', code='authorization'
+            )
+
+        attrs['user'] = user
+        return attrs
+'''
+
+
+# Convierte los modelo a JSON para las peticiones.
+class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
-        fields = '__all__'
-        read_only_fields = ('id_user', 'registration_date')
+        model = User
+        fields = (
+            'id_user',
+            'email',
+            'identity_document',
+            'phone_number',
+            'first_name',
+            'last_name',
+            'password',
+            'registration_date',
+            'last_login',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+        )
+        read_only_fields = ('id_user', 'registration_date', 'last_login')
+        extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver.
 
     def create(self, validated_data):
-        user = get_user_model().objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
 
         return user
 
@@ -36,12 +74,6 @@ from .models import (
 
         return user
 
-
-class UserLoginSerializer(serializers.Serializer):
-	email = serializers.CharField()
-	password = serializers.CharField()
-	token = serializers.CharField(read_only=True)
-'''
 
 class DriverSerializer(serializers.ModelSerializer):
     class Meta:
@@ -106,8 +138,8 @@ class TripSerializer(serializers.ModelSerializer):
         read_only_fields = ('id_trip',)
 
 
-class PassangerTripSerializer(serializers.ModelSerializer):
+class Passenger_TripSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PassangerTrip
+        model = Passenger_Trip
         fields = '__all__'
-        read_only_fields = ('id_passanger_trip',)
+        read_only_fields = ('id_passenger_trip',)

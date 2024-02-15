@@ -10,7 +10,7 @@ from .models import (
     Vehicle,
     Driver_Vehicle,
     Trip,
-    PassangerTrip,
+    Passenger_Trip,
 )
 
 # Register your models here.
@@ -24,4 +24,4 @@ admin.site.register(VehicleModel)
 admin.site.register(Vehicle)
 admin.site.register(Driver_Vehicle)
 admin.site.register(Trip)
-admin.site.register(PassangerTrip)
+admin.site.register(Passenger_Trip)
