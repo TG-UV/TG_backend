@@ -4,11 +4,11 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
-from .serializers import UserCustomSerializer, PassengerSerializer
-from .models import User, Passenger
+from .serializers import UserCustomSerializer
+from .models import User
 
 
-# Vistas para admins
+# Admins
 
 
 # Listar todos los usuarios
@@ -41,7 +41,7 @@ class CreateTokenView(ObtainAuthToken):
 
 
 # Registrar pasajero
-@api_view(["POST"])
+'''@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def passenger_register(request):
     user_serializer = UserCustomSerializer(data=request.data)
@@ -60,8 +60,30 @@ def passenger_register(request):
 
     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+'''
+# Conductores
 
-# Vistas para pasajeros
+
+# Mostrar datos en la página de inicio
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def home_driver(request):
+
+    id_user = request.user.id_user
+    try:
+        # Busca el conductor según el id del usuario que ha iniciado sesión
+        driver = User.objects.get(id_user=id_user, type__name='Conductor')
+        serializer = UserCustomSerializer(driver)
+        content = {'name': serializer.data['first_name']}
+        return Response(content, status=status.HTTP_200_OK)
+
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'No existe conductor con ese id'}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+# Pasajeros
 
 
 # Mostrar datos en la página de inicio
@@ -72,15 +94,14 @@ def home_passenger(request):
     id_user = request.user.id_user
     try:
         # Busca el pasajero según el id del usuario que ha iniciado sesión
-        passenger = Passenger.objects.get(user_id=id_user)
-        serializer = PassengerSerializer(passenger)
-        content = serializer.data
-        content['name'] = request.user.first_name
+        passenger = User.objects.get(id_user=id_user, type__name='Pasajero')
+        serializer = UserCustomSerializer(passenger)
+        content = {'name': serializer.data['first_name']}
         return Response(content, status=status.HTTP_200_OK)
 
-    except Passenger.DoesNotExist:
+    except User.DoesNotExist:
         return Response(
-            {'error': 'El pasajero no existe'}, status=status.HTTP_400_BAD_REQUEST
+            {'error': 'No existe pasajero con ese id'}, status=status.HTTP_400_BAD_REQUEST
         )
 
 

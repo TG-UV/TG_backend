@@ -2,15 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from djoser.serializers import UserSerializer
 from .models import (
+    UserType,
+    City,
     User,
-    Driver,
-    Passenger,
     VehicleColor,
     VehicleBrand,
     VehicleType,
     VehicleModel,
     Vehicle,
-    Driver_Vehicle,
     Trip,
     Passenger_Trip,
 )
@@ -39,6 +38,20 @@ class AuthTokenSerializer(serializers.Serializer):
 
 
 # Convierte los modelo a JSON para las peticiones.
+class UserTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserType
+        fields = '__all__'
+        read_only_fields = ('id_user_type',)
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = '__all__'
+        read_only_fields = ('id_city',)
+
+
 class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -49,8 +62,11 @@ class UserCustomSerializer(serializers.ModelSerializer):
             'phone_number',
             'first_name',
             'last_name',
+            'date_of_birth',
             'password',
             'registration_date',
+            'residence_city',
+            'type',
             'last_login',
             'is_active',
             'is_staff',
@@ -73,20 +89,6 @@ class UserCustomSerializer(serializers.ModelSerializer):
             user.save()
 
         return user
-
-
-class DriverSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Driver
-        fields = '__all__'
-        read_only_fields = ('id', 'registration_date')
-
-
-class PassengerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Passenger
-        fields = '__all__'
-        read_only_fields = ('id_passenger', 'registration_date')
 
 
 class VehicleColorSerializer(serializers.ModelSerializer):
@@ -122,13 +124,6 @@ class VehicleSerializer(serializers.ModelSerializer):
         model = Vehicle
         fields = '__all__'
         read_only_fields = ('id_vehicle',)
-
-
-class Driver_VehicleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Driver_Vehicle
-        fields = '__all__'
-        read_only_fields = ('id_driver_Vehicle',)
 
 
 class TripSerializer(serializers.ModelSerializer):
