@@ -1,48 +1,46 @@
 from rest_framework import viewsets, permissions
 from .serializers import (
+    UserTypeSerializer,
+    CitySerializer,
     UserCustomSerializer,
-    DriverSerializer,
-    PassengerSerializer,
     VehicleColorSerializer,
     VehicleBrandSerializer,
     VehicleTypeSerializer,
     VehicleModelSerializer,
     VehicleSerializer,
-    Driver_VehicleSerializer,
     TripSerializer,
     Passenger_TripSerializer,
 )
 from .models import (
+    UserType,
+    City,
     User,
-    Driver,
-    Passenger,
     VehicleColor,
     VehicleBrand,
     VehicleType,
     VehicleModel,
     Vehicle,
-    Driver_Vehicle,
     Trip,
     Passenger_Trip,
 )
+
+
+class UserTypeViewSet(viewsets.ModelViewSet):
+    queryset = UserType.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserTypeSerializer
+
+
+class CityViewSet(viewsets.ModelViewSet):
+    queryset = City.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = CitySerializer
 
 
 class UserCustomViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = UserCustomSerializer
-
-
-class DriverViewSet(viewsets.ModelViewSet):
-    queryset = Driver.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = DriverSerializer
-
-
-class PassengerViewSet(viewsets.ModelViewSet):
-    queryset = Passenger.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PassengerSerializer
 
 
 class VehicleColorViewSet(viewsets.ModelViewSet):
@@ -73,12 +71,6 @@ class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = VehicleSerializer
-
-
-class Driver_VehicleViewSet(viewsets.ModelViewSet):
-    queryset = Driver_Vehicle.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = Driver_VehicleSerializer
 
 
 class TripViewSet(viewsets.ModelViewSet):
