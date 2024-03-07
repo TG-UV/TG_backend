@@ -142,6 +142,7 @@ class Passenger_Trip(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     passenger = models.ForeignKey(User, on_delete=models.CASCADE)
     pickup_point = models.CharField(max_length=255)
+    seats = models.IntegerField()
     is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
