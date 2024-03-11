@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate
-from djoser.serializers import UserSerializer
 from .models import (
     UserType,
     City,
@@ -13,28 +11,6 @@ from .models import (
     Trip,
     Passenger_Trip,
 )
-
-
-'''
-class AuthTokenSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(style={'input_type': 'password'})
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-        user = authenticate(
-            request=self.context.get('request'), username=email, password=password
-        )
-
-        if not user:
-            raise serializers.ValidationError(
-                'No se pudo autenticar', code='authorization'
-            )
-
-        attrs['user'] = user
-        return attrs
-'''
 
 
 # Convierte los modelo a JSON para las peticiones.

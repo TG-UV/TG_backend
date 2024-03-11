@@ -118,8 +118,20 @@ class Vehicle(models.Model):
     license_plate = models.CharField(max_length=10)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['license_plate', 'owner'], name='License_plate_Owner_Unique'
+            ) # Valida que un usuario no añada un mismo vehículo varias veces.
+        ]
+
+    def save(self, *args, **kwargs):
+        # Convierte la placa a mayúsculas antes de guardar.
+        self.license_plate = self.license_plate.upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Conductor {self.driver_owner} tiene vehículo {self.vehicle_brand} {self.vehicle_model} - {self.license_plate}"
+        return f"Conductor {self.owner} tiene vehículo {self.vehicle_brand} {self.vehicle_model} - {self.license_plate}"
 
 
 class Trip(models.Model):
