@@ -34,6 +34,7 @@ urlpatterns = [
     # ),
     # path('update_user/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'),
     path('user/registration/', views.registration, name='Registration'),
+    path('vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'),
     path('driver/vehicle/', views.my_vehicles, name='MyVehicles'),
     path('driver/vehicle/add/', views.add_vehicle, name='AddVehicle'),
     path('driver/vehicle/<int:id>/', views.get_vehicle, name='GetVehicle'),

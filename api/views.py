@@ -1,12 +1,30 @@
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema
+# from django.contrib.auth.models import User
 from django.db import IntegrityError
 from rest_framework.response import Response
-from .serializers import UserCustomSerializer, CitySerializer, VehicleSerializer
-from .models import User, City, Vehicle
+from .serializers import (
+    CitySerializer,
+    UserCustomSerializer,
+    VehicleColorSerializer,
+    VehicleBrandSerializer,
+    VehicleTypeSerializer,
+    VehicleModelSerializer,
+    VehicleSerializer,
+)
+from .models import (
+    User,
+    City,
+    Vehicle,
+    VehicleColor,
+    VehicleBrand,
+    VehicleType,
+    VehicleModel,
+)
 from .permissions import IsAdmin, IsDriver, IsPassenger
+from api import custom_schemas
 
 # Admins
 
@@ -24,6 +42,7 @@ def list_users(request):
 
 
 # Obtener datos para el registro
+@extend_schema(**custom_schemas.registration_schema)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def registration(request):
@@ -34,6 +53,32 @@ def registration(request):
 
 
 # Conductores
+
+
+# Obtener datos para registrar un vehículo
+@extend_schema(**custom_schemas.vehicle_registration_schema)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def vehicle_registration(request):
+    colors = VehicleColor.objects.all()
+    colors_serializer = VehicleColorSerializer(colors, many=True)
+
+    brands = VehicleBrand.objects.all()
+    brands_serializer = VehicleBrandSerializer(brands, many=True)
+
+    types = VehicleType.objects.all()
+    types_serializer = VehicleTypeSerializer(types, many=True)
+
+    models = VehicleModel.objects.all()
+    models_serializer = VehicleModelSerializer(models, many=True)
+
+    content = {
+        'types': types_serializer.data,
+        'brands': brands_serializer.data,
+        'models': models_serializer.data,
+        'colors': colors_serializer.data,
+    }
+    return Response(content, status=status.HTTP_200_OK)
 
 
 # Añadir vehículo
