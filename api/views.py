@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 # from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -35,8 +36,11 @@ from api import custom_schemas
 @permission_classes([IsAuthenticated, IsAdmin])
 def list_users(request):
     queryset = User.objects.all()
-    serializer = UserCustomSerializer(queryset, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    serializer = UserCustomSerializer(paginated_results, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 # Vistas de registro
@@ -137,8 +141,11 @@ def get_vehicle(request, id):
 def my_vehicles(request):
     user = request.user
     queryset = Vehicle.objects.filter(owner=user.id_user)
-    serializer = ViewVehicleSerializer(queryset, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    serializer = ViewVehicleSerializer(paginated_results, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 # Mostrar datos en la página de inicio
