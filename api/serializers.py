@@ -102,6 +102,33 @@ class VehicleSerializer(serializers.ModelSerializer):
         read_only_fields = ('id_vehicle',)
 
 
+class ViewVehicleSerializer(serializers.ModelSerializer):
+    vehicle_type = serializers.SerializerMethodField()
+    vehicle_brand = serializers.SerializerMethodField()
+    vehicle_model = serializers.SerializerMethodField()
+    vehicle_color = serializers.SerializerMethodField()
+    owner = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Vehicle
+        fields = '__all__'
+
+    def get_vehicle_type(self, obj):
+        return obj.vehicle_type.name if obj.vehicle_type else None
+
+    def get_vehicle_brand(self, obj):
+        return obj.vehicle_brand.name if obj.vehicle_brand else None
+
+    def get_vehicle_model(self, obj):
+        return obj.vehicle_model.name if obj.vehicle_model else None
+
+    def get_vehicle_color(self, obj):
+        return obj.vehicle_color.name if obj.vehicle_color else None
+
+    def get_owner(self, obj):
+        return obj.owner.first_name + ' ' + obj.owner.last_name if obj.owner else None
+
+
 class TripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip

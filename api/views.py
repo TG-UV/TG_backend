@@ -13,6 +13,7 @@ from .serializers import (
     VehicleTypeSerializer,
     VehicleModelSerializer,
     VehicleSerializer,
+    ViewVehicleSerializer
 )
 from .models import (
     User,
@@ -114,7 +115,7 @@ def get_vehicle(request, id):
         queryset = Vehicle.objects.get(id_vehicle=id)
 
         if queryset.owner.id_user == user.id_user:
-            serializer = VehicleSerializer(queryset)
+            serializer = ViewVehicleSerializer(queryset)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         else:
@@ -136,7 +137,7 @@ def get_vehicle(request, id):
 def my_vehicles(request):
     user = request.user
     queryset = Vehicle.objects.filter(owner=user.id_user)
-    serializer = VehicleSerializer(queryset, many=True)
+    serializer = ViewVehicleSerializer(queryset, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
