@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
+
 # from django.contrib.auth.models import User
 from django.db import IntegrityError
 from rest_framework.response import Response
@@ -14,7 +15,7 @@ from .serializers import (
     VehicleTypeSerializer,
     VehicleModelSerializer,
     VehicleSerializer,
-    ViewVehicleSerializer
+    ViewVehicleSerializer,
 )
 from .models import (
     User,
@@ -58,6 +59,15 @@ def registration(request):
 
 
 # Conductores
+
+
+# Mostrar datos en la página de inicio
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsDriver])
+def home_driver(request):
+    user = request.user
+    content = {'name': user.first_name}
+    return Response(content, status=status.HTTP_200_OK)
 
 
 # Obtener datos para registrar un vehículo
@@ -116,10 +126,10 @@ def add_vehicle(request):
 def get_vehicle(request, id):
     user = request.user
     try:
-        queryset = Vehicle.objects.get(id_vehicle=id)
+        vehicle = Vehicle.objects.get(id_vehicle=id)
 
-        if queryset.owner.id_user == user.id_user:
-            serializer = ViewVehicleSerializer(queryset)
+        if vehicle.owner.id_user == user.id_user:
+            serializer = ViewVehicleSerializer(vehicle)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         else:
@@ -131,7 +141,7 @@ def get_vehicle(request, id):
     except Vehicle.DoesNotExist:
         return Response(
             {'error': 'No se encontró un vehículo con ese id.'},
-            status=status.HTTP_400_BAD_REQUEST,
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -148,13 +158,63 @@ def my_vehicles(request):
     return paginator.get_paginated_response(serializer.data)
 
 
-# Mostrar datos en la página de inicio
-@api_view(['GET'])
+# Actualizar vehículo
+@api_view(['PATCH'])
 @permission_classes([IsAuthenticated, IsDriver])
-def home_driver(request):
+def update_vehicle(request, id):
     user = request.user
-    content = {'name': user.first_name}
-    return Response(content, status=status.HTTP_200_OK)
+    vehicle_data = request.data
+    vehicle_data['owner'] = (
+        user.id_user
+    )  # El dueño es el mismo usuario que realiza la petición.
+    try:
+        vehicle = Vehicle.objects.get(id_vehicle=id)
+
+        if vehicle.owner.id_user == user.id_user:
+            serializer = VehicleSerializer(vehicle, data=request.data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(
+                {'error': 'Acceso no autorizado.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    except Vehicle.DoesNotExist:
+        return Response(
+            {'error': 'No se encontró un vehículo con ese id.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
+# Eliminar vehículo
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsDriver])
+def delete_vehicle(request, id):
+    user = request.user
+    try:
+        vehicle = Vehicle.objects.get(id_vehicle=id)
+
+        if vehicle.owner.id_user == user.id_user:
+            vehicle.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        else:
+            return Response(
+                {'error': 'Acceso no autorizado.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    except Vehicle.DoesNotExist:
+        return Response(
+            {'error': 'No se encontró un vehículo con ese id.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
 
 # Pasajeros
