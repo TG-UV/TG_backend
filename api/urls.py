@@ -4,7 +4,7 @@ from api import views
 from .api import (
     UserTypeViewSet,
     CityViewSet,
-    UserCustomViewSet,
+    UserExtendedViewSet,
     VehicleColorViewSet,
     VehicleBrandViewSet,
     VehicleTypeViewSet,
@@ -16,7 +16,7 @@ from .api import (
 
 router = routers.DefaultRouter()
 
-router.register('user', UserCustomViewSet, 'UserCustom')
+router.register('user', UserExtendedViewSet, 'UserExtended')
 router.register('userType', UserTypeViewSet, 'UserType')
 router.register('city', CityViewSet, 'Passenger')
 router.register('vehicleColor', VehicleColorViewSet, 'VehicleColor')
@@ -34,6 +34,7 @@ urlpatterns = [
     # ),
     # path('update_user/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'),
     path('user/registration/', views.registration, name='Registration'),
+    path('user/profile/', views.get_profile, name='Profile'),
     path('vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'),
     path('driver/vehicle/', views.my_vehicles, name='MyVehicles'),
     path('driver/vehicle/add/', views.add_vehicle, name='AddVehicle'),

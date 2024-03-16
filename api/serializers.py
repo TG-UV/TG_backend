@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from djoser.serializers import UserSerializer
 from .models import (
     UserType,
     City,
@@ -28,7 +29,8 @@ class CitySerializer(serializers.ModelSerializer):
         read_only_fields = ('id_city',)
 
 
-class UserCustomSerializer(serializers.ModelSerializer):
+class UserExtendedSerializer(UserSerializer):
+
     class Meta:
         model = User
         fields = (
@@ -67,6 +69,31 @@ class UserCustomSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserCustomSerializer(UserSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'id_user',
+            'email',
+            'identity_document',
+            'phone_number',
+            'first_name',
+            'last_name',
+            'date_of_birth',
+            'residence_city',
+            'is_active',
+        )
+        read_only_fields = ('id_user', 'email')
+
+
+class ViewUserCustomSerializer(UserCustomSerializer):
+    residence_city = serializers.SerializerMethodField()
+
+    def get_residence_city(self, obj):
+        return obj.residence_city.name if obj.residence_city else None
+
+
 class VehicleColorSerializer(serializers.ModelSerializer):
     class Meta:
         model = VehicleColor
@@ -102,16 +129,12 @@ class VehicleSerializer(serializers.ModelSerializer):
         read_only_fields = ('id_vehicle',)
 
 
-class ViewVehicleSerializer(serializers.ModelSerializer):
+class ViewVehicleSerializer(VehicleSerializer):
     vehicle_type = serializers.SerializerMethodField()
     vehicle_brand = serializers.SerializerMethodField()
     vehicle_model = serializers.SerializerMethodField()
     vehicle_color = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Vehicle
-        fields = '__all__'
 
     def get_vehicle_type(self, obj):
         return obj.vehicle_type.name if obj.vehicle_type else None

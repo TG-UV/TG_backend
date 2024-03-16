@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions
 from .serializers import (
     UserTypeSerializer,
     CitySerializer,
-    UserCustomSerializer,
+    UserExtendedSerializer,
     VehicleColorSerializer,
     VehicleBrandSerializer,
     VehicleTypeSerializer,
@@ -37,10 +37,10 @@ class CityViewSet(viewsets.ModelViewSet):
     serializer_class = CitySerializer
 
 
-class UserCustomViewSet(viewsets.ModelViewSet):
+class UserExtendedViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = UserCustomSerializer
+    serializer_class = UserExtendedSerializer
 
 
 class VehicleColorViewSet(viewsets.ModelViewSet):
