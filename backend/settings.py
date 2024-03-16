@@ -148,6 +148,12 @@ REST_FRAMEWORK = {
     #'PAGE_SIZE': 10,
 }
 
+DJOSER = {
+    'SERIALIZERS': {
+        'user': 'api.serializers.UserCustomSerializer',
+        'current_user': 'api.serializers.UserCustomSerializer',
+    }
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
