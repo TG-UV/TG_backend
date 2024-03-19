@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from djoser.serializers import UserSerializer
+from djoser.serializers import UserSerializer, UserCreateSerializer
 from .models import (
     UserType,
     City,
@@ -29,7 +29,7 @@ class CitySerializer(serializers.ModelSerializer):
         read_only_fields = ('id_city',)
 
 
-class UserExtendedSerializer(UserSerializer):
+class ExtendedUserSerializer(UserSerializer):
 
     class Meta:
         model = User
@@ -69,7 +69,32 @@ class UserExtendedSerializer(UserSerializer):
         return user
 
 
-class UserCustomSerializer(UserSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
+
+    def validate(self, attrs):
+        email = attrs.get("email")
+        type = attrs.get("type")
+        allowed_types = ['Conductor', 'Pasajero']
+        errors = {}
+
+        # Validaciones de Django.
+        attrs = super().validate(attrs)
+
+        # Valida que solo se puedan registrar Conductores o Pasajeros.
+        if not type.name in allowed_types:
+            errors['type'] = 'Tipo de usuario inválido.'
+
+        # Valida el dominio del correo.
+        if not email.endswith('@correounivalle.edu.co'):
+            errors['email'] = 'El dominio del correo debe ser correounivalle.edu.co.'
+
+        if not errors:
+            return attrs
+        else:
+            raise serializers.ValidationError(errors)
+
+
+class CustomUserSerializer(UserSerializer):
 
     class Meta:
         model = User
@@ -87,7 +112,7 @@ class UserCustomSerializer(UserSerializer):
         read_only_fields = ('id_user', 'email')
 
 
-class ViewUserCustomSerializer(UserCustomSerializer):
+class UserViewSerializer(CustomUserSerializer):
     residence_city = serializers.SerializerMethodField()
 
     def get_residence_city(self, obj):

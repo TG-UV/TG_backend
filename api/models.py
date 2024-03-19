@@ -1,9 +1,11 @@
+import re
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
+from api.custom_validators import validate_date_of_birth
 
 
 class UserManager(BaseUserManager):
@@ -53,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=10)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(validators=[validate_date_of_birth])
     registration_date = models.DateTimeField(auto_now_add=True)
     residence_city = models.ForeignKey(City, on_delete=models.CASCADE)
     type = models.ForeignKey(UserType, on_delete=models.CASCADE)
@@ -72,6 +74,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         'residence_city',
         'type',
     ]
+
+    def save(self, *args, **kwargs):
+        # Da formato a algunos campos antes de guardar.
+        self.first_name = re.sub(r' {2,}', ' ', self.first_name)
+        self.last_name = re.sub(r' {2,}', ' ', self.last_name)
+        self.phone_number = re.sub(r' {1,}', '', self.phone_number)
+        self.identity_document = re.sub(r' {1,}', '', self.identity_document)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email}) {self.type}"
@@ -122,7 +132,7 @@ class Vehicle(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['license_plate', 'owner'], name='License_plate_Owner_Unique'
-            ) # Valida que un usuario no añada un mismo vehículo varias veces.
+            )  # Valida que un usuario no añada un mismo vehículo varias veces.
         ]
 
     def save(self, *args, **kwargs):

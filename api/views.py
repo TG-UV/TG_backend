@@ -1,15 +1,14 @@
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
-# from django.contrib.auth.models import User
 from django.db import IntegrityError
 from rest_framework.response import Response
 from .serializers import (
     CitySerializer,
-    UserExtendedSerializer,
-    ViewUserCustomSerializer,
+    ExtendedUserSerializer,
+    UserViewSerializer,
     VehicleColorSerializer,
     VehicleBrandSerializer,
     VehicleTypeSerializer,
@@ -28,6 +27,7 @@ from .models import (
 )
 from .permissions import IsAdmin, IsDriver, IsPassenger
 from api import custom_schemas
+from djoser.views import UserViewSet
 
 # Admins
 
@@ -40,7 +40,7 @@ def list_users(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    serializer = UserExtendedSerializer(paginated_results, many=True)
+    serializer = ExtendedUserSerializer(paginated_results, many=True)
     return paginator.get_paginated_response(serializer.data)
 
 
@@ -59,6 +59,10 @@ def registration(request):
 
 
 # Todos los usuarios
+class CustomUserViewSet(UserViewSet):
+    @action(['get', 'patch'], detail=False)
+    def me(self, request, *args, **kwargs):
+        return super().me(request, *args, **kwargs)
 
 
 # Ver perfil
@@ -66,7 +70,7 @@ def registration(request):
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     user = request.user
-    serializer = ViewUserCustomSerializer(user)
+    serializer = UserViewSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
