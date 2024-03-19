@@ -2,9 +2,9 @@ from rest_framework import routers
 from django.urls import path, include
 from api import views
 from .api import (
+    ExtendedUserViewSet,
     UserTypeViewSet,
     CityViewSet,
-    UserExtendedViewSet,
     VehicleColorViewSet,
     VehicleBrandViewSet,
     VehicleTypeViewSet,
@@ -16,7 +16,8 @@ from .api import (
 
 router = routers.DefaultRouter()
 
-router.register('user', UserExtendedViewSet, 'UserExtended')
+router.register('users', views.CustomUserViewSet, 'CustomUser')
+router.register('users-management', ExtendedUserViewSet, 'ExtendedUser')
 router.register('userType', UserTypeViewSet, 'UserType')
 router.register('city', CityViewSet, 'Passenger')
 router.register('vehicleColor', VehicleColorViewSet, 'VehicleColor')
@@ -28,14 +29,12 @@ router.register('trip', TripViewSet, 'Trip')
 router.register('passenger-trip', Passenger_TripViewSet, 'Passenger_Trip')
 
 urlpatterns = [
-    path('user/list/', views.list_users, name='ListUsers'),
-    # path(
-    #    'create_superuser/', views.CreateSuperuserView.as_view(), name='CreateSuperuser'
-    # ),
-    # path('update_user/', views.UpdateSuperuserView.as_view(), name='UpdateSuperuser'),
-    path('user/registration/', views.registration, name='Registration'),
-    path('user/profile/', views.get_profile, name='Profile'),
-    path('vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'),
+    path('users-management/list/', views.list_users, name='ListUsers'),
+    path('users/registration/', views.registration, name='Registration'),
+    path('users/profile/', views.get_profile, name='Profile'),
+    path(
+        'vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'
+    ),
     path('driver/vehicle/', views.my_vehicles, name='MyVehicles'),
     path('driver/vehicle/add/', views.add_vehicle, name='AddVehicle'),
     path('driver/vehicle/delete/<int:id>/', views.delete_vehicle, name='DeleteVehicle'),
