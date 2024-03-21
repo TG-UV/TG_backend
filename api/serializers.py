@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from djoser.serializers import UserSerializer, UserCreateSerializer
+from api import error_messages
 from .models import (
     UserType,
     City,
@@ -30,7 +31,6 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 class ExtendedUserSerializer(UserSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -50,16 +50,38 @@ class ExtendedUserSerializer(UserSerializer):
             'is_staff',
             'is_superuser',
         )
-        read_only_fields = ('id_user', 'registration_date', 'last_login')
-        extra_kwargs = {'password': {'write_only': True}}  # Para que no se pueda ver.
+        read_only_fields = (
+            'id_user',
+            'registration_date',
+            'last_login',
+            'is_staff',
+            'is_superuser',
+        )
+        extra_kwargs = {
+            'password': {'write_only': True, 'style': {'input_type': 'password'}}
+        }  # Para que no se pueda ver.
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        user_type = validated_data['type']
+
+        if user_type.name == 'Admin':
+            user = User.objects.create_superuser(**validated_data)
+        else:
+            user = User.objects.create_user(**validated_data)
 
         return user
 
     def update(self, instance, validated_data):
+        user_type = validated_data.get('type', instance.type)
         password = validated_data.pop('password', None)
+
+        if user_type.name == 'Admin':
+            validated_data['is_staff'] = True
+            validated_data['is_superuser'] = True
+        else:
+            validated_data['is_staff'] = False
+            validated_data['is_superuser'] = False
+
         user = super().update(instance, validated_data)
 
         if password:
@@ -72,8 +94,8 @@ class ExtendedUserSerializer(UserSerializer):
 class CustomUserCreateSerializer(UserCreateSerializer):
 
     def validate(self, attrs):
-        email = attrs.get("email")
-        type = attrs.get("type")
+        email = attrs['email']
+        user_type = attrs['type']
         allowed_types = ['Conductor', 'Pasajero']
         errors = {}
 
@@ -81,12 +103,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         attrs = super().validate(attrs)
 
         # Valida que solo se puedan registrar Conductores o Pasajeros.
-        if not type.name in allowed_types:
-            errors['type'] = 'Tipo de usuario inválido.'
+        if user_type.name not in allowed_types:
+            errors['type'] = error_messages.INVALID_USER_TYPE
 
         # Valida el dominio del correo.
         if not email.endswith('@correounivalle.edu.co'):
-            errors['email'] = 'El dominio del correo debe ser correounivalle.edu.co.'
+            errors['email'] = error_messages.EMAIL_DOMAIN_NOT_ALLOWED
 
         if not errors:
             return attrs

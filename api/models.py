@@ -79,8 +79,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Da formato a algunos campos antes de guardar.
         self.first_name = re.sub(r' {2,}', ' ', self.first_name)
         self.last_name = re.sub(r' {2,}', ' ', self.last_name)
-        self.phone_number = re.sub(r' {1,}', '', self.phone_number)
-        self.identity_document = re.sub(r' {1,}', '', self.identity_document)
+        self.phone_number = re.sub(r' +', '', self.phone_number)
+        self.identity_document = re.sub(r' +', '', self.identity_document)
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -1,0 +1,5 @@
+EMAIL_DOMAIN_NOT_ALLOWED = 'El dominio del correo debe ser correounivalle.edu.co.'
+INVALID_DATE_OF_BIRTH = 'La fecha de nacimiento no puede ser mayor que la fecha actual.'
+INVALID_USER_TYPE = 'Tipo de usuario inválido.'
+LICENSE_PLATE_ALREADY_EXISTS = 'Ya tienes un vehículo con esa placa.'
+VEHICLE_DOES_NOT_EXIST = 'No tienes un vehículo con ese id.'
