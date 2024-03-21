@@ -26,7 +26,7 @@ from .models import (
     VehicleModel,
 )
 from .permissions import IsAdmin, IsDriver, IsPassenger
-from api import custom_schemas
+from api import custom_schemas, error_messages
 from djoser.views import UserViewSet
 
 # Admins
@@ -118,9 +118,9 @@ def vehicle_registration(request):
 def add_vehicle(request):
     user = request.user
     vehicle_data = request.data
-    vehicle_data['owner'] = (
-        user.id_user
-    )  # El dueño es el mismo usuario que realiza la petición.
+    '''El dueño debe ser el mismo usuario que realiza la petición.'''
+    vehicle_data['owner'] = user.id_user
+
     vehicle = VehicleSerializer(data=vehicle_data)
 
     if vehicle.is_valid():
@@ -129,7 +129,7 @@ def add_vehicle(request):
             return Response(vehicle.data, status=status.HTTP_201_CREATED)
 
         except IntegrityError:
-            content = {'error': 'Ya tienes un vehículo con esa placa.'}
+            content = {'error': error_messages.LICENSE_PLATE_ALREADY_EXISTS}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     else:
@@ -149,14 +149,11 @@ def get_vehicle(request, id):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         else:
-            return Response(
-                {'error': 'Acceso no autorizado.'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise Vehicle.DoesNotExist
 
     except Vehicle.DoesNotExist:
         return Response(
-            {'error': 'No se encontró un vehículo con ese id.'},
+            {'error': error_messages.VEHICLE_DOES_NOT_EXIST},
             status=status.HTTP_404_NOT_FOUND,
         )
 
@@ -175,19 +172,19 @@ def my_vehicles(request):
 
 
 # Actualizar vehículo
-@api_view(['PATCH'])
+@api_view(['PATCH', 'PUT'])
 @permission_classes([IsAuthenticated, IsDriver])
 def update_vehicle(request, id):
     user = request.user
     vehicle_data = request.data
-    vehicle_data['owner'] = (
-        user.id_user
-    )  # El dueño es el mismo usuario que realiza la petición.
+
     try:
         vehicle = Vehicle.objects.get(id_vehicle=id)
 
         if vehicle.owner.id_user == user.id_user:
-            serializer = VehicleSerializer(vehicle, data=request.data, partial=True)
+            '''El dueño debe ser el mismo usuario que realiza la petición.'''
+            vehicle_data['owner'] = user.id_user
+            serializer = VehicleSerializer(vehicle, data=vehicle_data, partial=True)
 
             if serializer.is_valid():
                 serializer.save()
@@ -196,16 +193,17 @@ def update_vehicle(request, id):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            return Response(
-                {'error': 'Acceso no autorizado.'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise Vehicle.DoesNotExist
 
     except Vehicle.DoesNotExist:
         return Response(
-            {'error': 'No se encontró un vehículo con ese id.'},
+            {'error': error_messages.VEHICLE_DOES_NOT_EXIST},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+    except IntegrityError:
+        content = {'error': error_messages.LICENSE_PLATE_ALREADY_EXISTS}
+        return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Eliminar vehículo
@@ -221,14 +219,11 @@ def delete_vehicle(request, id):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         else:
-            return Response(
-                {'error': 'Acceso no autorizado.'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise Vehicle.DoesNotExist
 
     except Vehicle.DoesNotExist:
         return Response(
-            {'error': 'No se encontró un vehículo con ese id.'},
+            {'error': error_messages.VEHICLE_DOES_NOT_EXIST},
             status=status.HTTP_404_NOT_FOUND,
         )
 

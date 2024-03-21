@@ -17,7 +17,7 @@ from .api import (
 router = routers.DefaultRouter()
 
 router.register('users', views.CustomUserViewSet, 'CustomUser')
-router.register('users-management', ExtendedUserViewSet, 'ExtendedUser')
+router.register('user-management', ExtendedUserViewSet, 'ExtendedUser')
 router.register('userType', UserTypeViewSet, 'UserType')
 router.register('city', CityViewSet, 'Passenger')
 router.register('vehicleColor', VehicleColorViewSet, 'VehicleColor')
@@ -29,7 +29,7 @@ router.register('trip', TripViewSet, 'Trip')
 router.register('passenger-trip', Passenger_TripViewSet, 'Passenger_Trip')
 
 urlpatterns = [
-    path('users-management/list/', views.list_users, name='ListUsers'),
+    path('user-management/list/', views.list_users, name='ListUsers'),
     path('users/registration/', views.registration, name='Registration'),
     path('users/profile/', views.get_profile, name='Profile'),
     path(
