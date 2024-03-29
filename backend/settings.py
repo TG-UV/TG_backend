@@ -165,6 +165,9 @@ DJOSER = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS = [
+    os.environ.get('FRONT_END_ORIGIN_1'),
+    os.environ.get('FRONT_END_ORIGIN_2'),
+]
 
 AUTH_USER_MODEL = 'api.User'
