@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'DEPLOYED' not in os.environ
 
-ALLOWED_HOSTS = [] if 'DEPLOYED' not in os.environ else ['.vercel.app', '.now.sh']
+ALLOWED_HOSTS = [] if DEBUG else ['.vercel.app', '.now.sh']
 
 # Application definition
 
@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware'
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -145,19 +145,31 @@ REST_FRAMEWORK = {
     ],
     #'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    #'PAGE_SIZE': 10,
 }
-
+'''
+if not DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+        'rest_framework.renderers.JSONRenderer',
+    ]
+'''
 DJOSER = {
     'PERMISSIONS': {
         'user_delete': ['api.permissions.IsAdmin'],
-    }, 
+    },
     'SERIALIZERS': {
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
-        'user_create': 'api.serializers.CustomUserCreateSerializer'
-    }
+        'user_create': 'api.serializers.CustomUserCreateSerializer',
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API RAYO',
+    'DESCRIPTION': 'Aplicación de viajes compartidos universitarios.',
+    'VERSION': '1.0.0',
+    'CONTACT': {
+        'name': 'Rayo',
+    },
 }
 
 # Default primary key field type

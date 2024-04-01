@@ -26,13 +26,21 @@ from .models import (
     VehicleModel,
 )
 from .permissions import IsAdmin, IsDriver, IsPassenger
-from api import custom_schemas, error_messages
+from api import error_messages
+from .schemas import (
+    driver_schemas,
+    general_schemas,
+    registration_schemas,
+    user_schemas,
+    vehicle_schemas,
+)
 from djoser.views import UserViewSet
 
 # Admins
 
 
 # Listar todos los usuarios
+@extend_schema(**user_schemas.list_users_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def list_users(request):
@@ -48,7 +56,7 @@ def list_users(request):
 
 
 # Obtener datos para el registro
-@extend_schema(**custom_schemas.registration_schema)
+@extend_schema(**registration_schemas.registration_schema)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def registration(request):
@@ -66,6 +74,7 @@ class CustomUserViewSet(UserViewSet):
 
 
 # Ver perfil
+@extend_schema(**user_schemas.get_profile_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
@@ -78,6 +87,7 @@ def get_profile(request):
 
 
 # Mostrar datos en la página de inicio
+@extend_schema(**general_schemas.home_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsDriver])
 def home_driver(request):
@@ -87,7 +97,7 @@ def home_driver(request):
 
 
 # Obtener datos para registrar un vehículo
-@extend_schema(**custom_schemas.vehicle_registration_schema)
+@extend_schema(**vehicle_schemas.vehicle_registration_schema)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def vehicle_registration(request):
@@ -113,6 +123,7 @@ def vehicle_registration(request):
 
 
 # Añadir vehículo
+@extend_schema(**driver_schemas.add_vehicle_schema)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsDriver])
 def add_vehicle(request):
@@ -137,6 +148,7 @@ def add_vehicle(request):
 
 
 # Obtener vehículo
+@extend_schema(**driver_schemas.get_vehicle_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsDriver])
 def get_vehicle(request, id):
@@ -159,6 +171,7 @@ def get_vehicle(request, id):
 
 
 # Obtener todos los vehículos
+@extend_schema(**driver_schemas.my_vehicles_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsDriver])
 def my_vehicles(request):
@@ -172,6 +185,7 @@ def my_vehicles(request):
 
 
 # Actualizar vehículo
+@extend_schema(**driver_schemas.update_vehicle_schema)
 @api_view(['PATCH', 'PUT'])
 @permission_classes([IsAuthenticated, IsDriver])
 def update_vehicle(request, id):
@@ -207,6 +221,7 @@ def update_vehicle(request, id):
 
 
 # Eliminar vehículo
+@extend_schema(**driver_schemas.delete_vehicle_schema)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsDriver])
 def delete_vehicle(request, id):
@@ -232,6 +247,7 @@ def delete_vehicle(request, id):
 
 
 # Mostrar datos en la página de inicio
+@extend_schema(**general_schemas.home_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsPassenger])
 def home_passenger(request):
