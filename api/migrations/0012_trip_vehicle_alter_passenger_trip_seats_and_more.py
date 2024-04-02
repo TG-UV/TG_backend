@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='trip',
             name='vehicle',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='api.vehicle'),
+            field=models.ForeignKey(default=6, on_delete=django.db.models.deletion.CASCADE, to='api.vehicle'),
             preserve_default=False,
         ),
         migrations.AlterField(

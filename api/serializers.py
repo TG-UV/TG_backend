@@ -180,6 +180,13 @@ class VehicleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('id_vehicle',)
 
+    def validate(self, attrs):
+        owner = attrs['owner']
+
+        validate_driver(owner)
+
+        return attrs
+
 
 class ViewVehicleSerializer(VehicleSerializer):
     class Meta(VehicleSerializer.Meta):
