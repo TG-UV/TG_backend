@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import routers
 from django.urls import path, include
 from api import views
@@ -14,12 +15,19 @@ from .api import (
     Passenger_TripViewSet,
 )
 
+'''
+if settings.DEBUG :
+    router = routers.DefaultRouter()
+else:
+    router = routers.SimpleRouter()
+'''
+
 router = routers.DefaultRouter()
 
 router.register('users', views.CustomUserViewSet, 'CustomUser')
 router.register('user-management', ExtendedUserViewSet, 'ExtendedUser')
 router.register('userType', UserTypeViewSet, 'UserType')
-router.register('city', CityViewSet, 'Passenger')
+router.register('city', CityViewSet, 'City')
 router.register('vehicleColor', VehicleColorViewSet, 'VehicleColor')
 router.register('vehicleBrand', VehicleBrandViewSet, 'VehicleBrand')
 router.register('vehicleType', VehicleTypeViewSet, 'VehicleType')

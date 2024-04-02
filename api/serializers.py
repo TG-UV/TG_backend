@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from api import error_messages
+from .custom_validators import (
+    validate_driver,
+    validate_passenger,
+    validate_vehicle_owner,
+)
 from .models import (
     UserType,
     City,
@@ -211,9 +216,25 @@ class TripSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('id_trip',)
 
+    def validate(self, attrs):
+        driver = attrs['driver']
+        vehicle = attrs['vehicle']
+
+        validate_driver(driver)
+        validate_vehicle_owner(driver, vehicle)
+
+        return attrs
+
 
 class Passenger_TripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Passenger_Trip
         fields = '__all__'
         read_only_fields = ('id_passenger_trip',)
+
+    def validate(self, attrs):
+        passenger = attrs['passenger']
+
+        validate_passenger(passenger)
+
+        return attrs
