@@ -5,10 +5,22 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
-from api.custom_validators import validate_date_of_birth
+from django.core.exceptions import ValidationError
+from .custom_validators import (
+    validate_date_of_birth,
+    validate_lowercase_email,
+    validate_identity_document,
+    validate_phone_number,
+    validate_seats,
+    validate_fare,
+)
 
 
 class UserManager(BaseUserManager):
+    def get_by_natural_key(self, username):
+        case_insensitive_username_field = '{}__iexact'.format(self.model.USERNAME_FIELD)
+        return self.get(**{case_insensitive_username_field: username})
+
     def create_user(self, email, password, **kwargs):
         if not email:
             raise ValueError('Se requiere un email')
@@ -16,7 +28,6 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError('Se requiere una contraseña')
 
-        email = self.normalize_email(email)
         user = self.model(email=email, **kwargs)
         user.set_password(password)
         user.save()
@@ -50,9 +61,11 @@ class City(models.Model):
 
 class User(AbstractBaseUser, PermissionsMixin):
     id_user = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True)
-    identity_document = models.CharField(max_length=10)
-    phone_number = models.CharField(max_length=10)
+    email = models.EmailField(unique=True, validators=[validate_lowercase_email])
+    identity_document = models.CharField(
+        max_length=10, validators=[validate_identity_document]
+    )
+    phone_number = models.CharField(max_length=10, validators=[validate_phone_number])
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField(validators=[validate_date_of_birth])
@@ -79,8 +92,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Da formato a algunos campos antes de guardar.
         self.first_name = re.sub(r' {2,}', ' ', self.first_name)
         self.last_name = re.sub(r' {2,}', ' ', self.last_name)
-        self.phone_number = re.sub(r' +', '', self.phone_number)
-        self.identity_document = re.sub(r' +', '', self.identity_document)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -141,18 +152,19 @@ class Vehicle(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Conductor {self.owner} tiene vehículo {self.vehicle_brand} {self.vehicle_model} - {self.license_plate}"
+        return f"Vehículo {self.vehicle_brand} {self.vehicle_model} - {self.license_plate} registrado por {self.owner}"
 
 
 class Trip(models.Model):
     id_trip = models.AutoField(primary_key=True)
     driver = models.ForeignKey(User, on_delete=models.CASCADE)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     start_date = models.DateField()
     start_time = models.TimeField()
     starting_point = models.CharField(max_length=255)
     arrival_point = models.CharField(max_length=255)
-    seats = models.IntegerField()
-    fare = models.IntegerField()
+    seats = models.IntegerField(validators=[validate_seats])
+    fare = models.IntegerField(validators=[validate_fare])
     current_trip = models.BooleanField(default=False)
 
     def __str__(self):
@@ -164,8 +176,15 @@ class Passenger_Trip(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     passenger = models.ForeignKey(User, on_delete=models.CASCADE)
     pickup_point = models.CharField(max_length=255)
-    seats = models.IntegerField()
+    seats = models.IntegerField(validators=[validate_seats])
     is_confirmed = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['passenger', 'trip'], name='Passenger_Trip_Unique'
+            )  # Valida que un pasajero solo aparezca una vez en un viaje.
+        ]
+    
     def __str__(self):
         return f"Id: {self.id_passenger_trip} Pasajero {self.passenger} en el viaje {self.trip}"
