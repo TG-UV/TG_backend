@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from drf_spectacular.utils import OpenApiExample, inline_serializer
-from api.serializers import ExtendedUserSerializer, UserViewSerializer
+from api.serializers import ExtendedUserSerializer
 
 list_users_schema = {
     'description': 'Lista de usuarios registrados en la aplicación (requiere token).',
@@ -69,6 +69,7 @@ get_profile_schema = {
                 "last_name": serializers.CharField(),
                 "date_of_birth": serializers.DateField(),
                 "residence_city": serializers.CharField(),
+                "type": serializers.CharField(),
                 "is_active": serializers.BooleanField(),
             },
         ),
@@ -85,6 +86,7 @@ get_profile_schema = {
                 "last_name": "Ríos",
                 "date_of_birth": "2000-10-22",
                 "residence_city": "Cali",
+                "type": "Pasajero",
                 "is_active": True,
             },
             description='Se reemplazan los ids por los nombres de los campos. Por ej. '

@@ -5,7 +5,6 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
-from django.core.exceptions import ValidationError
 from .custom_validators import (
     validate_date_of_birth,
     validate_lowercase_email,
@@ -185,6 +184,6 @@ class Passenger_Trip(models.Model):
                 fields=['passenger', 'trip'], name='Passenger_Trip_Unique'
             )  # Valida que un pasajero solo aparezca una vez en un viaje.
         ]
-    
+
     def __str__(self):
         return f"Id: {self.id_passenger_trip} Pasajero {self.passenger} en el viaje {self.trip}"
