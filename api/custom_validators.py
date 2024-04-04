@@ -1,10 +1,10 @@
 from django.core.exceptions import ValidationError
-from datetime import datetime
+from django.utils import timezone
 from api import error_messages
 
 
 def validate_date_of_birth(date_of_birth):
-    current_date = datetime.now().date()
+    current_date = timezone.now().date()
 
     if date_of_birth > current_date:
         raise ValidationError(error_messages.INVALID_DATE_OF_BIRTH)

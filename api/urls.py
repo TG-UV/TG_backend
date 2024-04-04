@@ -41,6 +41,8 @@ urlpatterns = [
     path('users/registration/', views.registration, name='Registration'),
     path('users/profile/', views.get_profile, name='Profile'),
     path('vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'),
+    #path('driver/trip/history/', views.trip_history, name='TripHistory'),
+    #path('driver/trip/planned/', views.planned_trips, name='PlannedTrips'),
     path('driver/trip/add/', views.add_trip, name='AddTrip'),
     path('driver/trip/update/<int:id_trip>/', views.update_trip, name='UpdateTrip'),
     path('driver/trip/<int:id_trip>/', views.get_trip, name='GetTrip'),
@@ -50,6 +52,7 @@ urlpatterns = [
     path('driver/vehicle/update/<int:id_vehicle>/', views.update_vehicle, name='UpdateVehicle'),
     path('driver/vehicle/<int:id_vehicle>/', views.get_vehicle, name='GetVehicle'),
     path('driver/home/', views.home_driver, name='HomeDriver'),
+    path('passenger/trip/<int:id_trip>/', views.get_trip_passenger, name='GetTripPassenger'),
     path('passenger/home/', views.home_passenger, name='HomePassenger'),
     path('', include(router.urls)),
 ]
