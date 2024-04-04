@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError
+from django.db.models import F, ExpressionWrapper, DateTimeField
+from django.utils import timezone
 from rest_framework.response import Response
 from .serializers import (
     CitySerializer,
@@ -18,6 +20,8 @@ from .serializers import (
     TripSerializer,
     ViewTripSerializer,
     ViewPassenger_TripSerializer,
+    Passenger_TripSerializer,
+    ViewTripForPassengerSerializer,
 )
 from .models import (
     User,
@@ -260,7 +264,7 @@ def get_trip(request, id_trip):
         trip = Trip.objects.get(id_trip=id_trip, driver=user.id_user)
         trip_serializer = ViewTripSerializer(trip)
 
-        passengers = Passenger_Trip.objects.filter(trip=id_trip).order_by('passenger')
+        passengers = Passenger_Trip.objects.filter(trip=id_trip)
         passengers_serializer = ViewPassenger_TripSerializer(passengers, many=True)
 
         confirmed_passengers = [
@@ -280,6 +284,34 @@ def get_trip(request, id_trip):
             {'error': error_messages.TRIP_DOES_NOT_EXIST},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+
+# Obtener historial de viajes
+@extend_schema(**driver_schemas.my_vehicles_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsDriver])
+def trip_history(request):
+    user = request.user
+    current_datetime = timezone.now()
+
+    queryset = Trip.objects.values(
+        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+    ).annotate(
+        start_datetime=ExpressionWrapper(
+            F('start_date') + F('start_time'), output_field=DateTimeField()
+        )
+    )
+    queryset = queryset.filter(
+        start_datetime__lt=current_datetime, driver=user.id_user
+    ).order_by(
+        'start_date', 'start_time'
+    )  # lt signifia less than.
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    serializer = TripSerializer(paginated_results, many=True, partial=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 # Actualizar viaje
@@ -320,3 +352,29 @@ def home_passenger(request):
     user = request.user
     content = {'name': user.first_name}
     return Response(content, status=status.HTTP_200_OK)
+
+
+# Obtener viaje
+@extend_schema(**driver_schemas.get_trip_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsPassenger])
+def get_trip_passenger(request, id_trip):
+    user = request.user
+    try:
+        passenger_trip = Passenger_Trip.objects.get(trip=id_trip, passenger=user.id_user)
+        passenger_trip_serializer = Passenger_TripSerializer(
+            passenger_trip, partial=True
+        )
+
+        trip = Trip.objects.get(id_trip=id_trip)
+        trip_serializer = ViewTripForPassengerSerializer(trip)
+
+        content = passenger_trip_serializer.data
+        content['trip'] = trip_serializer.data
+        return Response(content, status=status.HTTP_200_OK)
+
+    except Passenger_Trip.DoesNotExist:
+        return Response(
+            {'error': error_messages.PASSENGER_IS_NOT_ON_THE_TRIP},
+            status=status.HTTP_404_NOT_FOUND,
+        )

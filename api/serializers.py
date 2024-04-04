@@ -279,7 +279,8 @@ class Passenger_TripSerializer(serializers.ModelSerializer):
 class ViewPassenger_TripSerializer(Passenger_TripSerializer):
 
     passenger = serializers.SerializerMethodField()
-
+    #owner_email = serializers.CharField(source='owner.email')
+    
     def get_passenger(self, obj):
         return (
             {
@@ -289,5 +290,20 @@ class ViewPassenger_TripSerializer(Passenger_TripSerializer):
                 "last_name": obj.passenger.last_name,
             }
             if obj.passenger
+            else None
+        )
+
+class ViewTripForPassengerSerializer(ViewTripSerializer):
+
+    driver = serializers.SerializerMethodField()
+
+    def get_driver(self, obj):
+        return (
+            {
+                "phone_number": obj.driver.phone_number,
+                "first_name": obj.driver.first_name,
+                "last_name": obj.driver.last_name,
+            }
+            if obj.driver
             else None
         )
