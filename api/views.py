@@ -357,15 +357,12 @@ def trip_history(request):
     user = request.user
     current_datetime = timezone.now()
 
-    queryset = Trip.objects.values(
+    queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
-    ).annotate(
-        start_datetime=ExpressionWrapper(
-            F('start_date') + F('start_time'), output_field=DateTimeField()
-        )
     )
+
     queryset = queryset.filter(
-        start_datetime__lt=current_datetime, driver=user.id_user
+        start_date__lte=current_datetime.date(), driver=user.id_user
     ).order_by(
         'start_date', 'start_time'
     )  # lt signifia less than.
@@ -376,6 +373,29 @@ def trip_history(request):
     serializer = TripSerializer(paginated_results, many=True, partial=True)
     return paginator.get_paginated_response(serializer.data)
 
+# Obtener viajes plaenados
+# @extend_schema(**driver_schemas.my_vehicles_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def planned_trips(request):
+    user = request.user
+    current_datetime = timezone.now()
+
+    queryset = Trip.objects.only(
+        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+    )
+
+    queryset = queryset.filter(
+        start_date__gt=current_datetime.date(), driver=user.id_user
+    ).order_by(
+        'start_date', 'start_time'
+    )  # gt signifia greater than.
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    serializer = TripSerializer(paginated_results, many=True, partial=True)
+    return paginator.get_paginated_response(serializer.data)
 
 # Actualizar viaje
 @extend_schema(**driver_schemas.update_trip_schema)
