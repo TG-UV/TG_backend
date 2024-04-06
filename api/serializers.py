@@ -140,7 +140,7 @@ class CustomUserSerializer(UserSerializer):
         read_only_fields = ('id_user', 'email', 'type')
 
 
-class UserViewSerializer(CustomUserSerializer):
+class ViewUserSerializer(CustomUserSerializer):
     residence_city = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
 
@@ -149,6 +149,17 @@ class UserViewSerializer(CustomUserSerializer):
 
     def get_type(self, obj):
         return obj.type.name if obj.type else None
+
+
+class ViewUserReduceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'phone_number',
+            'first_name',
+            'last_name',
+        )
+        read_only_fields = fields
 
 
 class VehicleColorSerializer(serializers.ModelSerializer):
@@ -194,8 +205,16 @@ class VehicleSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ViewVehicleSerializer(VehicleSerializer):
-    class Meta(VehicleSerializer.Meta):
+class VehicleSerializerForDriver(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
+        fields = '__all__'
+        read_only_fields = ('id_vehicle',)
+
+
+class ViewVehicleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
         fields = (
             'id_vehicle',
             'vehicle_type',
@@ -204,6 +223,7 @@ class ViewVehicleSerializer(VehicleSerializer):
             'vehicle_color',
             'license_plate',
         )
+        read_only_fields = fields
 
     vehicle_type = serializers.SerializerMethodField()
     vehicle_brand = serializers.SerializerMethodField()
@@ -223,6 +243,19 @@ class ViewVehicleSerializer(VehicleSerializer):
         return obj.vehicle_color.name if obj.vehicle_color else None
 
 
+class ViewVehicleSerializerForPassenger(ViewVehicleSerializer):
+    class Meta:
+        model = Vehicle
+        fields = (
+            'vehicle_type',
+            'vehicle_brand',
+            'vehicle_model',
+            'vehicle_color',
+            'license_plate',
+        )
+        read_only_fields = fields
+
+
 class TripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
@@ -233,32 +266,18 @@ class TripSerializer(serializers.ModelSerializer):
         driver = attrs.get('driver', None)
         vehicle = attrs.get('vehicle', None)
 
-        if driver:
-            validate_driver(driver)
-
         if driver and vehicle:
             validate_vehicle_owner(driver, vehicle)
 
         return attrs
 
 
-class ViewTripSerializer(TripSerializer):
+class ViewTripSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trip
+        fields = '__all__'
 
-    vehicle = serializers.SerializerMethodField()
-
-    def get_vehicle(self, obj):
-        return (
-            {
-                "id_vehicle": obj.vehicle.id_vehicle,
-                "license_plate": obj.vehicle.license_plate,
-                "vehicle_type": obj.vehicle.vehicle_type.name,
-                "vehicle_brand": obj.vehicle.vehicle_brand.name,
-                "vehicle_model": obj.vehicle.vehicle_model.name,
-                "vehicle_color": obj.vehicle.vehicle_color.name,
-            }
-            if obj.vehicle
-            else None
-        )
+    driver = ViewUserReduceSerializer()
 
 
 class Passenger_TripSerializer(serializers.ModelSerializer):
@@ -276,34 +295,30 @@ class Passenger_TripSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ViewPassenger_TripSerializer(Passenger_TripSerializer):
+class ViewPassenger_TripSerializerForDriver(serializers.ModelSerializer):
 
-    passenger = serializers.SerializerMethodField()
-    #owner_email = serializers.CharField(source='owner.email')
-    
-    def get_passenger(self, obj):
-        return (
-            {
-                "id_passenger": obj.passenger.id_user,
-                "phone_number": obj.passenger.phone_number,
-                "first_name": obj.passenger.first_name,
-                "last_name": obj.passenger.last_name,
-            }
-            if obj.passenger
-            else None
+    class Meta:
+        model = Passenger_Trip
+        fields = (
+            'id_passenger_trip',
+            'passenger',
+            'pickup_point',
+            'seats',
+            'is_confirmed',
         )
+        read_only_fields = fields
 
-class ViewTripForPassengerSerializer(ViewTripSerializer):
+    passenger = ViewUserReduceSerializer()
 
-    driver = serializers.SerializerMethodField()
 
-    def get_driver(self, obj):
-        return (
-            {
-                "phone_number": obj.driver.phone_number,
-                "first_name": obj.driver.first_name,
-                "last_name": obj.driver.last_name,
-            }
-            if obj.driver
-            else None
+class ViewPassenger_TripSerializerForPassenger(serializers.ModelSerializer):
+
+    class Meta:
+        model = Passenger_Trip
+        fields = (
+            'id_passenger_trip',
+            'pickup_point',
+            'seats',
+            'is_confirmed',
         )
+        read_only_fields = fields

@@ -10,18 +10,18 @@ from rest_framework.response import Response
 from .serializers import (
     CitySerializer,
     ExtendedUserSerializer,
-    UserViewSerializer,
+    ViewUserSerializer,
     VehicleColorSerializer,
     VehicleBrandSerializer,
     VehicleTypeSerializer,
     VehicleModelSerializer,
-    VehicleSerializer,
     ViewVehicleSerializer,
+    ViewVehicleSerializerForPassenger,
     TripSerializer,
+    VehicleSerializerForDriver,
+    ViewPassenger_TripSerializerForDriver,
+    ViewPassenger_TripSerializerForPassenger,
     ViewTripSerializer,
-    ViewPassenger_TripSerializer,
-    Passenger_TripSerializer,
-    ViewTripForPassengerSerializer,
 )
 from .models import (
     User,
@@ -34,11 +34,12 @@ from .models import (
     Trip,
     Passenger_Trip,
 )
-from .permissions import IsAdmin, IsDriver, IsPassenger
+from .permissions import IsAdmin, IsDriver
 from api import error_messages
 from .schemas import (
     driver_schemas,
     general_schemas,
+    passenger_schemas,
     registration_schemas,
     user_schemas,
     vehicle_schemas,
@@ -65,6 +66,8 @@ def list_users(request):
 
 
 # Obtener datos para el registro
+
+
 @extend_schema(**registration_schemas.registration_schema)
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -88,21 +91,37 @@ class CustomUserViewSet(UserViewSet):
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     user = request.user
-    serializer = UserViewSerializer(user)
+    user = (
+        User.objects.select_related('residence_city', 'type')
+        .only(
+            'id_user',
+            'email',
+            'identity_document',
+            'phone_number',
+            'first_name',
+            'last_name',
+            'date_of_birth',
+            'residence_city',
+            'type',
+            'is_active',
+        )
+        .get(id_user=user.id_user)
+    )
+    serializer = ViewUserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# Conductores
 
 
 # Mostrar datos en la página de inicio
 @extend_schema(**general_schemas.home_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsDriver])
-def home_driver(request):
+@permission_classes([IsAuthenticated])
+def home(request):
     user = request.user
     content = {'name': user.first_name}
     return Response(content, status=status.HTTP_200_OK)
+
+
+# Conductores
 
 
 # Obtener datos para registrar un vehículo
@@ -141,7 +160,7 @@ def add_vehicle(request):
     '''El dueño debe ser el mismo usuario que realiza la petición.'''
     vehicle_data['owner'] = user.id_user
 
-    vehicle = VehicleSerializer(data=vehicle_data)
+    vehicle = VehicleSerializerForDriver(data=vehicle_data)
 
     if vehicle.is_valid():
         try:
@@ -159,11 +178,27 @@ def add_vehicle(request):
 # Obtener vehículo
 @extend_schema(**driver_schemas.get_vehicle_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsDriver])
+@permission_classes([IsAuthenticated])
 def get_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = Vehicle.objects.get(id_vehicle=id_vehicle, owner=user.id_user)
+        vehicle = (
+            Vehicle.objects.select_related(
+                'vehicle_type',
+                'vehicle_brand',
+                'vehicle_model',
+                'vehicle_color',
+            )
+            .only(
+                'id_vehicle',
+                'vehicle_type',
+                'vehicle_brand',
+                'vehicle_model',
+                'vehicle_color',
+                'license_plate',
+            )
+            .get(id_vehicle=id_vehicle, owner=user.id_user)
+        )
         serializer = ViewVehicleSerializer(vehicle)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -177,10 +212,27 @@ def get_vehicle(request, id_vehicle):
 # Obtener todos los vehículos
 @extend_schema(**driver_schemas.my_vehicles_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsDriver])
+@permission_classes([IsAuthenticated])
 def my_vehicles(request):
     user = request.user
-    vehicles = Vehicle.objects.filter(owner=user.id_user).order_by('license_plate')
+    vehicles = (
+        Vehicle.objects.filter(owner=user.id_user)
+        .select_related(
+            'vehicle_type',
+            'vehicle_brand',
+            'vehicle_model',
+            'vehicle_color',
+        )
+        .only(
+            'id_vehicle',
+            'vehicle_type',
+            'vehicle_brand',
+            'vehicle_model',
+            'vehicle_color',
+            'license_plate',
+        )
+        .order_by('license_plate')
+    )
     serializer = ViewVehicleSerializer(vehicles, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -195,9 +247,16 @@ def update_vehicle(request, id_vehicle):
 
     try:
         vehicle = Vehicle.objects.get(id_vehicle=id_vehicle, owner=user.id_user)
+
         '''El dueño debe ser el mismo usuario que realiza la petición.'''
         vehicle_data['owner'] = user.id_user
-        serializer = VehicleSerializer(vehicle, data=vehicle_data, partial=True)
+
+        '''Si el método es PUT debe tener todos los campos.'''
+        partial = False if request.method == 'PUT' else True
+
+        serializer = VehicleSerializerForDriver(
+            vehicle, data=vehicle_data, partial=partial
+        )
 
         if serializer.is_valid():
             serializer.save()
@@ -257,29 +316,33 @@ def add_trip(request):
 # Obtener viaje
 @extend_schema(**driver_schemas.get_trip_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsDriver])
-def get_trip(request, id_trip):
+@permission_classes([IsAuthenticated])
+def get_trip_driver(request, id_trip):
     user = request.user
-    try:
-        trip = Trip.objects.get(id_trip=id_trip, driver=user.id_user)
-        trip_serializer = ViewTripSerializer(trip)
+    trip = Trip.objects.filter(id_trip=id_trip, driver=user.id_user).exists()
 
-        passengers = Passenger_Trip.objects.filter(trip=id_trip)
-        passengers_serializer = ViewPassenger_TripSerializer(passengers, many=True)
-
-        confirmed_passengers = [
-            item for item in passengers_serializer.data if item['is_confirmed']
-        ]
-        pending_passengers = [
-            item for item in passengers_serializer.data if not item['is_confirmed']
-        ]
-
-        content = trip_serializer.data
-        content['confirmed_passengers'] = confirmed_passengers
-        content['pending_passengers'] = pending_passengers
+    if trip:
+        queryset = (
+            Passenger_Trip.objects.filter(trip=id_trip)
+            .select_related(
+                'trip',
+                'passenger',
+            )
+            .only(
+                'passenger',
+                'pickup_point',
+                'seats',
+                'is_confirmed',
+                'passenger__phone_number',
+                'passenger__first_name',
+                'passenger__last_name',
+                'trip__driver',
+            )
+        )
+        serializer = ViewPassenger_TripSerializerForDriver(queryset, many=True)
+        content = {'id_trip': id_trip, 'passengers': serializer.data}
         return Response(content, status=status.HTTP_200_OK)
-
-    except Trip.DoesNotExist:
+    else:
         return Response(
             {'error': error_messages.TRIP_DOES_NOT_EXIST},
             status=status.HTTP_404_NOT_FOUND,
@@ -287,9 +350,9 @@ def get_trip(request, id_trip):
 
 
 # Obtener historial de viajes
-@extend_schema(**driver_schemas.my_vehicles_schema)
+# @extend_schema(**driver_schemas.my_vehicles_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsDriver])
+@permission_classes([IsAuthenticated])
 def trip_history(request):
     user = request.user
     current_datetime = timezone.now()
@@ -324,9 +387,14 @@ def update_trip(request, id_trip):
 
     try:
         trip = Trip.objects.get(id_trip=id_trip, driver=user.id_user)
+
         '''El conductor debe ser el mismo usuario que realiza la petición.'''
         trip_data['driver'] = user.id_user
-        serializer = TripSerializer(trip, data=trip_data, partial=True)
+
+        '''Si el método es PUT debe tener todos los campos.'''
+        partial = False if request.method == 'PUT' else True
+
+        serializer = TripSerializer(trip, data=trip_data, partial=partial)
 
         if serializer.is_valid():
             serializer.save()
@@ -344,33 +412,66 @@ def update_trip(request, id_trip):
 # Pasajeros
 
 
-# Mostrar datos en la página de inicio
-@extend_schema(**general_schemas.home_schema)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, IsPassenger])
-def home_passenger(request):
-    user = request.user
-    content = {'name': user.first_name}
-    return Response(content, status=status.HTTP_200_OK)
-
-
 # Obtener viaje
-@extend_schema(**driver_schemas.get_trip_schema)
+@extend_schema(**passenger_schemas.get_trip_passenger_schema)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsPassenger])
+@permission_classes([IsAuthenticated])
 def get_trip_passenger(request, id_trip):
     user = request.user
     try:
-        passenger_trip = Passenger_Trip.objects.get(trip=id_trip, passenger=user.id_user)
-        passenger_trip_serializer = Passenger_TripSerializer(
-            passenger_trip, partial=True
+        passenger_Trip = Passenger_Trip.objects.only(
+            'pickup_point',
+            'seats',
+            'is_confirmed',
+        ).get(trip=id_trip, passenger=user.id_user)
+        passenger_trip_serializer = ViewPassenger_TripSerializerForPassenger(
+            passenger_Trip
         )
 
-        trip = Trip.objects.get(id_trip=id_trip)
-        trip_serializer = ViewTripForPassengerSerializer(trip)
+        trip = (
+            Trip.objects.select_related(
+                'driver',
+            )
+            .only(
+                'start_date',
+                'start_time',
+                'starting_point',
+                'arrival_point',
+                'seats',
+                'fare',
+                'current_trip',
+                'driver__first_name',
+                'driver__last_name',
+                'driver__phone_number',
+                'vehicle',
+            )
+            .get(id_trip=id_trip)
+        )
+
+        trip_serializer = ViewTripSerializer(trip)
+        trip_data = trip_serializer.data
+
+        vehicle = (
+            Vehicle.objects.select_related(
+                'vehicle_type',
+                'vehicle_brand',
+                'vehicle_model',
+                'vehicle_color',
+            )
+            .only(
+                'license_plate',
+                'vehicle_type__name',
+                'vehicle_brand__name',
+                'vehicle_model__name',
+                'vehicle_color__name',
+            )
+            .get(id_vehicle=trip_data['vehicle'])
+        )
+        vehicle_serializer = ViewVehicleSerializerForPassenger(vehicle)
 
         content = passenger_trip_serializer.data
-        content['trip'] = trip_serializer.data
+        content['trip'] = trip_data
+        content['trip']['vehicle'] = vehicle_serializer.data
         return Response(content, status=status.HTTP_200_OK)
 
     except Passenger_Trip.DoesNotExist:

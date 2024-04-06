@@ -277,17 +277,7 @@ view_trip_serializer = inline_serializer(
     name="ViewTrip",
     fields={
         "id_trip": serializers.IntegerField(),
-        "start_date": serializers.DateField(),
-        "start_time": serializers.TimeField(),
-        "starting_point": serializers.CharField(),
-        "arrival_point": serializers.CharField(),
-        "seats": serializers.IntegerField(),
-        "fare": serializers.IntegerField(),
-        "current_trip": serializers.BooleanField(),
-        "driver": serializers.IntegerField(),
-        "vehicle": serializers.DictField(),
-        "confirmed_passengers": serializers.ListField(),
-        "pending_passengers": serializers.ListField(),
+        "passengers": serializers.ListField(),
     },
 )
 
@@ -298,54 +288,32 @@ get_trip_schema = {
     },
     'examples': [
         OpenApiExample(
-            "Trip",
+            "Get trip",
             value={
                 "id_trip": 1,
-                "vehicle": {
-                    "id_vehicle": 21,
-                    "license_plate": "OKK123",
-                    "vehicle_type": "Carro",
-                    "vehicle_brand": "Mercedes",
-                    "vehicle_model": "2024",
-                    "vehicle_color": "Negro",
-                },
-                "start_date": "2024-04-02",
-                "start_time": "02:56:51",
-                "starting_point": "Terminal",
-                "arrival_point": "Univalle",
-                "seats": 4,
-                "fare": 10000,
-                "current_trip": False,
-                "driver": 3,
-                "confirmed_passengers": [
-                    {
-                        "id_passenger_trip": 2,
-                        "passenger": {
-                            "id_passenger": 35,
-                            "phone_number": "3206678",
-                            "first_name": "Carlos",
-                            "last_name": "García",
-                        },
-                        "pickup_point": "Casa",
-                        "seats": 1,
-                        "is_confirmed": True,
-                        "trip": 1,
-                    }
-                ],
-                "pending_passengers": [
+                "passengers": [
                     {
                         "id_passenger_trip": 1,
                         "passenger": {
-                            "id_passenger": 10,
                             "phone_number": "3204654442",
                             "first_name": "Aura",
                             "last_name": "Aaa",
                         },
                         "pickup_point": "Casa",
                         "seats": 2,
+                        "is_confirmed": True,
+                    },
+                    {
+                        "id_passenger_trip": 2,
+                        "passenger": {
+                            "phone_number": "3206678020",
+                            "first_name": "Carlos",
+                            "last_name": "Dd",
+                        },
+                        "pickup_point": "Casa",
+                        "seats": 1,
                         "is_confirmed": False,
-                        "trip": 1,
-                    }
+                    },
                 ],
             },
             description='En este ejemplo el id de la url es 1: .../driver/trip/1/.',
