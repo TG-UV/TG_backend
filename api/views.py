@@ -4,7 +4,9 @@ from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError
-from django.db.models import F, ExpressionWrapper, DateTimeField
+from django.db.models import F, DateTimeField, Value
+from datetime import timedelta
+from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework.response import Response
 from .serializers import (
@@ -18,6 +20,7 @@ from .serializers import (
     ViewVehicleSerializer,
     ViewVehicleSerializerForPassenger,
     TripSerializer,
+    ViewTripReduceSerializer,
     VehicleSerializerForDriver,
     ViewPassenger_TripSerializerForDriver,
     ViewPassenger_TripSerializerForPassenger,
@@ -359,19 +362,27 @@ def trip_history(request):
 
     queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+    ).annotate(
+        start_datetime=Concat(
+            F('start_date'),
+            Value(' '),
+            F('start_time'),
+            output_field=DateTimeField(),
+        )
     )
 
     queryset = queryset.filter(
-        start_date__lte=current_datetime.date(), driver=user.id_user
+        start_datetime__lt=current_datetime, driver=user.id_user
     ).order_by(
-        'start_date', 'start_time'
+        '-start_datetime'
     )  # lt signifia less than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    serializer = TripSerializer(paginated_results, many=True, partial=True)
+    serializer = ViewTripReduceSerializer(paginated_results, many=True)
     return paginator.get_paginated_response(serializer.data)
+
 
 # Obtener viajes plaenados
 # @extend_schema(**driver_schemas.my_vehicles_schema)
@@ -383,19 +394,61 @@ def planned_trips(request):
 
     queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+    ).annotate(
+        start_datetime=Concat(
+            F('start_date'),
+            Value(' '),
+            F('start_time'),
+            output_field=DateTimeField(),
+        )
     )
 
     queryset = queryset.filter(
-        start_date__gt=current_datetime.date(), driver=user.id_user
+        start_datetime__gt=current_datetime, driver=user.id_user
     ).order_by(
-        'start_date', 'start_time'
+        'start_datetime'
     )  # gt signifia greater than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    serializer = TripSerializer(paginated_results, many=True, partial=True)
+    serializer = ViewTripReduceSerializer(paginated_results, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+# Obtener viaje actual
+# @extend_schema(**driver_schemas.my_vehicles_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_trip(request):
+    user = request.user
+    current_datetime = timezone.now()
+    two_hours_ago = timezone.now() - timedelta(hours=2)
+
+    queryset = Trip.objects.only(
+        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+    ).annotate(
+        start_datetime=Concat(
+            F('start_date'),
+            Value(' '),
+            F('start_time'),
+            output_field=DateTimeField(),
+        )
+    )
+
+    queryset = (
+        queryset.filter(
+            start_datetime__lte=current_datetime,
+            start_datetime__gt=two_hours_ago,
+            driver=user.id_user,
+        )
+        .order_by('-start_datetime')
+        .first()
+    )  # gt signifia greater than.
+
+    serializer = ViewTripReduceSerializer(queryset)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # Actualizar viaje
 @extend_schema(**driver_schemas.update_trip_schema)

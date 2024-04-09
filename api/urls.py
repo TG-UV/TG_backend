@@ -43,6 +43,7 @@ urlpatterns = [
     path('vehicle/registration/', views.vehicle_registration, name='VehiclesRegistration'),
     path('driver/trip/history/', views.trip_history, name='TripHistory'),
     path('driver/trip/planned/', views.planned_trips, name='PlannedTrips'),
+    path('driver/trip/current/', views.current_trip, name='CurrentTrip'),
     path('driver/trip/add/', views.add_trip, name='AddTrip'),
     path('driver/trip/update/<int:id_trip>/', views.update_trip, name='UpdateTrip'),
     path('driver/trip/<int:id_trip>/', views.get_trip_driver, name='GetTripDriver'),
