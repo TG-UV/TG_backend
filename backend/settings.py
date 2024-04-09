@@ -165,12 +165,16 @@ DJOSER = {
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
         'user_create': 'api.serializers.CustomUserCreateSerializer',
+        'set_username': 'api.serializers.CustomSetUsernameSerializer',
     },
 #    'USER_ID_FIELD': 'id_user',
 #    'LOGIN_FIELD': 'email',
 #    'SEND_ACTIVATION_EMAIL': True,
 #    'SEND_CONFIRMATION_EMAIL': True,
-#    'ACTIVATION_URL': 'activate/{uid}/{token}',
+#    'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
+#    'ACTIVATION_URL': '/rayo-activate/{uid}/{token}',
+#    'PASSWORD_RESET_CONFIRM_URL': '/rayo-password-reset/{uid}/{token}',
+#    'USERNAME_RESET_CONFIRM_URL': '/rayo-email-reset/{uid}/{token}',
 #    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
 }
 
@@ -193,8 +197,8 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_NAME = 'Rayo'
-
 '''
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

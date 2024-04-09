@@ -3,6 +3,9 @@ from django.utils import timezone
 from api import error_messages
 
 
+ALLOWED_EMAIL_DOMAIN = 'correounivalle.edu.co'
+
+
 def validate_date_of_birth(date_of_birth):
     current_date = timezone.now().date()
 
@@ -60,5 +63,14 @@ def validate_vehicle_owner(driver, vehicle):
             {
                 "vehicle": [error_messages.VEHICLE_DOES_NOT_BELONG_TO_THE_DRIVER],
                 "driver": [error_messages.VEHICLE_DOES_NOT_BELONG_TO_THE_DRIVER],
+            }
+        )
+
+
+def validate_email_domain(email):
+    if not email.endswith(ALLOWED_EMAIL_DOMAIN):
+        raise ValidationError(
+            {
+                'new_email': error_messages.EMAIL_DOMAIN_NOT_ALLOWED,
             }
         )

@@ -12,7 +12,7 @@ view_trip_serializer_for_passenger = inline_serializer(
     },
 )
 
-get_trip_passenger_schema = {
+get_trip_passenger_associated = {
     'description': 'Detalles de un viaje (requiere token).',
     'responses': {
         200: view_trip_serializer_for_passenger,

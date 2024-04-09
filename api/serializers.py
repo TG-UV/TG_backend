@@ -1,10 +1,17 @@
 from rest_framework import serializers
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from djoser.serializers import (
+    UserSerializer,
+    UserCreateSerializer,
+    UsernameSerializer,
+    CurrentPasswordSerializer,
+)
 from api import error_messages
 from .custom_validators import (
     validate_driver,
     validate_passenger,
     validate_vehicle_owner,
+    validate_email_domain,
+    ALLOWED_EMAIL_DOMAIN,
 )
 from .models import (
     UserType,
@@ -18,6 +25,7 @@ from .models import (
     Trip,
     Passenger_Trip,
 )
+from typing import Dict, Any
 
 
 # Convierte los modelo a JSON para las peticiones.
@@ -112,7 +120,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             errors['type'] = error_messages.INVALID_USER_TYPE
 
         # Valida el dominio del correo.
-        if not email.endswith('@correounivalle.edu.co'):
+        if not email.endswith(ALLOWED_EMAIL_DOMAIN):
             errors['email'] = error_messages.EMAIL_DOMAIN_NOT_ALLOWED
 
         if not errors:
@@ -160,6 +168,23 @@ class ViewUserReduceSerializer(serializers.ModelSerializer):
             'last_name',
         )
         read_only_fields = fields
+
+
+class CustomSetUsernameSerializer(UsernameSerializer, CurrentPasswordSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'current_password')
+
+    def validate(self, attrs):
+        email = attrs['email']
+
+        # Validaciones de Django.
+        attrs = super().validate(attrs)
+
+        # Valida el dominio del correo.
+        validate_email_domain(email)
+
+        return attrs
 
 
 class VehicleColorSerializer(serializers.ModelSerializer):
@@ -288,7 +313,31 @@ class ViewTripReduceSerializer(serializers.ModelSerializer):
 class ViewTripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
-        fields = '__all__'
+        fields = (
+            'id_trip',
+            'driver',
+            'start_date',
+            'start_time',
+            'starting_point',
+            'arrival_point',
+            'seats',
+            'fare',
+            'current_trip',
+            'vehicle',
+        )
+        read_only_fields = fields
+
+    driver = ViewUserReduceSerializer()
+
+
+class ViewTripDriverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trip
+        fields = (
+            'driver',
+            'vehicle',
+        )
+        read_only_fields = fields
 
     driver = ViewUserReduceSerializer()
 
@@ -335,3 +384,13 @@ class ViewPassenger_TripSerializerForPassenger(serializers.ModelSerializer):
             'is_confirmed',
         )
         read_only_fields = fields
+
+
+def serialize_passenger_trip(passenger_Trip: Passenger_Trip) -> Dict[str, Any]:
+    return {
+        'id_trip': passenger_Trip.trip.id_trip,
+        'start_date': passenger_Trip.trip.start_date,
+        'start_time': passenger_Trip.trip.start_time,
+        'starting_point': passenger_Trip.trip.starting_point,
+        'arrival_point': passenger_Trip.trip.arrival_point,
+    }
