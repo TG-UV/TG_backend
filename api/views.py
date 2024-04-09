@@ -4,9 +4,8 @@ from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError
-from django.db.models import F, DateTimeField, Value
+from django.db.models import F, DateTimeField, ExpressionWrapper
 from datetime import timedelta
-from django.db.models.functions import Concat
 from django.utils import timezone
 from rest_framework.response import Response
 from .serializers import (
@@ -25,6 +24,8 @@ from .serializers import (
     ViewPassenger_TripSerializerForDriver,
     ViewPassenger_TripSerializerForPassenger,
     ViewTripSerializer,
+    ViewTripDriverSerializer,
+    serialize_passenger_trip,
 )
 from .models import (
     User,
@@ -328,7 +329,6 @@ def get_trip_driver(request, id_trip):
         queryset = (
             Passenger_Trip.objects.filter(trip=id_trip)
             .select_related(
-                'trip',
                 'passenger',
             )
             .only(
@@ -339,7 +339,6 @@ def get_trip_driver(request, id_trip):
                 'passenger__phone_number',
                 'passenger__first_name',
                 'passenger__last_name',
-                'trip__driver',
             )
         )
         serializer = ViewPassenger_TripSerializerForDriver(queryset, many=True)
@@ -356,18 +355,15 @@ def get_trip_driver(request, id_trip):
 # @extend_schema(**driver_schemas.my_vehicles_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def trip_history(request):
+def trip_history_driver(request):
     user = request.user
     current_datetime = timezone.now()
 
     queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
     ).annotate(
-        start_datetime=Concat(
-            F('start_date'),
-            Value(' '),
-            F('start_time'),
-            output_field=DateTimeField(),
+        start_datetime=ExpressionWrapper(
+            F('start_date') + F('start_time'), output_field=DateTimeField()
         )
     )
 
@@ -384,22 +380,19 @@ def trip_history(request):
     return paginator.get_paginated_response(serializer.data)
 
 
-# Obtener viajes plaenados
+# Obtener viajes planeados
 # @extend_schema(**driver_schemas.my_vehicles_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def planned_trips(request):
+def planned_trips_driver(request):
     user = request.user
     current_datetime = timezone.now()
 
     queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
     ).annotate(
-        start_datetime=Concat(
-            F('start_date'),
-            Value(' '),
-            F('start_time'),
-            output_field=DateTimeField(),
+        start_datetime=ExpressionWrapper(
+            F('start_date') + F('start_time'), output_field=DateTimeField()
         )
     )
 
@@ -428,11 +421,8 @@ def current_trip(request):
     queryset = Trip.objects.only(
         'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
     ).annotate(
-        start_datetime=Concat(
-            F('start_date'),
-            Value(' '),
-            F('start_time'),
-            output_field=DateTimeField(),
+        start_datetime=ExpressionWrapper(
+            F('start_date') + F('start_time'), output_field=DateTimeField()
         )
     )
 
@@ -444,7 +434,7 @@ def current_trip(request):
         )
         .order_by('-start_datetime')
         .first()
-    )  # gt signifia greater than.
+    )  # lte signifia less than equal.
 
     serializer = ViewTripReduceSerializer(queryset)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -485,11 +475,11 @@ def update_trip(request, id_trip):
 # Pasajeros
 
 
-# Obtener viaje
-@extend_schema(**passenger_schemas.get_trip_passenger_schema)
+# Obtener viaje asociado
+@extend_schema(**passenger_schemas.get_trip_passenger_associated)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_trip_passenger(request, id_trip):
+def get_trip_passenger_associated(request, id_trip):
     user = request.user
     try:
         passenger_Trip = Passenger_Trip.objects.only(
@@ -552,3 +542,130 @@ def get_trip_passenger(request, id_trip):
             {'error': error_messages.PASSENGER_IS_NOT_ON_THE_TRIP},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+
+# Obtener viaje
+# @extend_schema(**passenger_schemas.get_trip_passenger_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_trip_passenger(request, id_trip):
+    try:
+        trip = (
+            Trip.objects.select_related(
+                'driver',
+            )
+            .only(
+                'vehicle',
+                'driver__first_name',
+                'driver__last_name',
+                'driver__phone_number',
+            )
+            .get(id_trip=id_trip)
+        )
+
+        trip_serializer = ViewTripDriverSerializer(trip)
+        trip_data = trip_serializer.data
+
+        vehicle = (
+            Vehicle.objects.select_related(
+                'vehicle_type',
+                'vehicle_brand',
+                'vehicle_model',
+                'vehicle_color',
+            )
+            .only(
+                'license_plate',
+                'vehicle_type__name',
+                'vehicle_brand__name',
+                'vehicle_model__name',
+                'vehicle_color__name',
+            )
+            .get(id_vehicle=trip_data['vehicle'])
+        )
+        vehicle_serializer = ViewVehicleSerializerForPassenger(vehicle)
+
+        content = trip_data
+        content['vehicle'] = vehicle_serializer.data
+        return Response(content, status=status.HTTP_200_OK)
+
+    except Trip.DoesNotExist:
+        return Response(
+            {'error': error_messages.TRIP_DOES_NOT_EXIST},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
+# Obtener historial de viajes
+# @extend_schema(**driver_schemas.my_vehicles_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def trip_history_passenger(request):
+    user = request.user
+    current_datetime = timezone.now()
+
+    queryset = (
+        Passenger_Trip.objects.select_related('trip')
+        .only(
+            'trip',
+            'trip__start_date',
+            'trip__start_time',
+            'trip__starting_point',
+            'trip__arrival_point',
+        )
+        .annotate(
+            start_datetime=ExpressionWrapper(
+                F('trip__start_date') + F('trip__start_time'),
+                output_field=DateTimeField(),
+            )
+        )
+    )
+
+    queryset = queryset.filter(
+        start_datetime__lt=current_datetime, passenger=user.id_user
+    ).order_by(
+        '-start_datetime'
+    )  # lt signifia less than.
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    content = [serialize_passenger_trip(item) for item in paginated_results]
+    return paginator.get_paginated_response(content)
+
+
+# Obtener viajes planeados
+# @extend_schema(**driver_schemas.my_vehicles_schema)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def planned_trips_passenger(request):
+    user = request.user
+    current_datetime = timezone.now()
+
+    queryset = (
+        Passenger_Trip.objects.select_related('trip')
+        .only(
+            'trip',
+            'trip__start_date',
+            'trip__start_time',
+            'trip__starting_point',
+            'trip__arrival_point',
+        )
+        .annotate(
+            start_datetime=ExpressionWrapper(
+                F('trip__start_date') + F('trip__start_time'),
+                output_field=DateTimeField(),
+            )
+        )
+    )
+
+    queryset = queryset.filter(
+        start_datetime__gt=current_datetime, passenger=user.id_user
+    ).order_by(
+        'start_datetime'
+    )  # gt signifia greater than.
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    content = [serialize_passenger_trip(item) for item in paginated_results]
+    return paginator.get_paginated_response(content)
