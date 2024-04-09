@@ -166,6 +166,12 @@ DJOSER = {
         'current_user': 'api.serializers.CustomUserSerializer',
         'user_create': 'api.serializers.CustomUserCreateSerializer',
     },
+#    'USER_ID_FIELD': 'id_user',
+#    'LOGIN_FIELD': 'email',
+#    'SEND_ACTIVATION_EMAIL': True,
+#    'SEND_CONFIRMATION_EMAIL': True,
+#    'ACTIVATION_URL': 'activate/{uid}/{token}',
+#    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
 }
 
 SPECTACULAR_SETTINGS = {
@@ -177,6 +183,18 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+'''
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'  # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+SITE_NAME = 'Rayo'
+
+'''
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

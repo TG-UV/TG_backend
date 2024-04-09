@@ -272,6 +272,19 @@ class TripSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class ViewTripReduceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trip
+        fields = (
+            'id_trip',
+            'start_date',
+            'start_time',
+            'starting_point',
+            'arrival_point',
+        )
+        read_only_fields = fields
+
+
 class ViewTripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
