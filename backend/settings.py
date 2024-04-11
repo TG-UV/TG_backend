@@ -136,8 +136,11 @@ USE_TZ = False
 STATIC_URL = 'static/'
 
 if not DEBUG:
-    STATICFILES_DIRS = os.path.join(BASE_DIR, 'static'),
+    STATICFILES_DIRS = os.path.join(BASE_DIR, 'static')
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles', 'static')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -146,16 +149,6 @@ REST_FRAMEWORK = {
     #'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
-
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-'''
-    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
-        'rest_framework.renderers.JSONRenderer',
-    ]
-'''
 
 DJOSER = {
     'PERMISSIONS': {
@@ -167,15 +160,6 @@ DJOSER = {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'set_username': 'api.serializers.CustomSetUsernameSerializer',
     },
-#    'USER_ID_FIELD': 'id_user',
-#    'LOGIN_FIELD': 'email',
-#    'SEND_ACTIVATION_EMAIL': True,
-#    'SEND_CONFIRMATION_EMAIL': True,
-#    'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
-#    'ACTIVATION_URL': '/rayo-activate/{uid}/{token}',
-#    'PASSWORD_RESET_CONFIRM_URL': '/rayo-password-reset/{uid}/{token}',
-#    'USERNAME_RESET_CONFIRM_URL': '/rayo-email-reset/{uid}/{token}',
-#    'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
 }
 
 SPECTACULAR_SETTINGS = {
@@ -187,17 +171,37 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-'''
-SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey'  # this is exactly the value 'apikey'
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_NAME = 'Rayo'
-'''
+
+PRODUCTION = 'PRODUCTION' in os.environ
+
+if PRODUCTION:
+    # drf
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+        'rest_framework.renderers.JSONRenderer',
+    ]
+
+ACTIVATE_EMAIL = 'ACTIVATE_EMAIL' in os.environ
+
+if ACTIVATE_EMAIL:
+    # djoser
+    SITE_NAME = 'Rayo'
+    DOMAIN = os.environ.get('EMAIL_LINKS_DOMAIN')
+    DJOSER['SEND_ACTIVATION_EMAIL'] = True
+    DJOSER['SEND_CONFIRMATION_EMAIL'] = True
+    DJOSER['USERNAME_CHANGED_EMAIL_CONFIRMATION'] = True
+    DJOSER['ACTIVATION_URL'] = 'rayo-activate/{uid}/{token}'
+    DJOSER['PASSWORD_RESET_CONFIRM_URL'] = 'rayo-password-reset/{uid}/{token}'
+    DJOSER['USERNAME_RESET_CONFIRM_URL'] = 'rayo-email-reset/{uid}/{token}'
+    DJOSER['TOKEN_MODEL'] = 'rest_framework.authtoken.models.Token'
+
+    # email
+    EMAIL_HOST = os.environ.get('EMAIL_HOST')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_API_KEY')
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

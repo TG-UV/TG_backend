@@ -15,14 +15,10 @@ from .api import (
     Passenger_TripViewSet,
 )
 
-'''
-if settings.DEBUG :
-    router = routers.DefaultRouter()
-else:
+if settings.PRODUCTION:
     router = routers.SimpleRouter()
-'''
-
-router = routers.DefaultRouter()
+else:
+    router = routers.DefaultRouter()
 
 router.register('users', views.CustomUserViewSet, 'CustomUser')
 router.register('user-management', ExtendedUserViewSet, 'ExtendedUser')
