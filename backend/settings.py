@@ -136,7 +136,7 @@ USE_TZ = False
 STATIC_URL = 'static/'
 
 if not DEBUG:
-    STATICFILES_DIRS = os.path.join(BASE_DIR, 'static')
+    STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles', 'static')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
