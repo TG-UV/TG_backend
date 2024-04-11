@@ -200,7 +200,6 @@ if ACTIVATE_EMAIL:
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_API_KEY')
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 
 # Default primary key field type
