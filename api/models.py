@@ -12,6 +12,8 @@ from .custom_validators import (
     validate_phone_number,
     validate_seats,
     validate_fare,
+    validate_latitude,
+    validate_longitude,
 )
 
 
@@ -160,8 +162,18 @@ class Trip(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     start_date = models.DateField()
     start_time = models.TimeField()
-    starting_point = models.CharField(max_length=255)
-    arrival_point = models.CharField(max_length=255)
+    starting_point_lat = models.DecimalField(
+        max_digits=8, decimal_places=6, validators=[validate_latitude]
+    )
+    starting_point_long = models.DecimalField(
+        max_digits=9, decimal_places=6, validators=[validate_longitude]
+    )
+    arrival_point_lat = models.DecimalField(
+        max_digits=8, decimal_places=6, validators=[validate_latitude]
+    )
+    arrival_point_long = models.DecimalField(
+        max_digits=9, decimal_places=6, validators=[validate_longitude]
+    )
     seats = models.IntegerField(validators=[validate_seats])
     fare = models.IntegerField(validators=[validate_fare])
     current_trip = models.BooleanField(default=False)
@@ -174,7 +186,12 @@ class Passenger_Trip(models.Model):
     id_passenger_trip = models.AutoField(primary_key=True)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     passenger = models.ForeignKey(User, on_delete=models.CASCADE)
-    pickup_point = models.CharField(max_length=255)
+    pickup_point_lat = models.DecimalField(
+        max_digits=8, decimal_places=6, validators=[validate_latitude]
+    )
+    pickup_point_long = models.DecimalField(
+        max_digits=9, decimal_places=6, validators=[validate_longitude]
+    )
     seats = models.IntegerField(validators=[validate_seats])
     is_confirmed = models.BooleanField(default=False)
 
