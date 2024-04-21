@@ -26,6 +26,7 @@ from .serializers import (
     ViewTripSerializer,
     ViewTripDriverSerializer,
     serialize_passenger_trip,
+    planned_trips_driver_serializer,
 )
 from .models import (
     User,
@@ -87,6 +88,18 @@ class CustomUserViewSet(UserViewSet):
     @action(['get', 'patch'], detail=False)
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
+
+    @action([], detail=False, url_path=f"set_{User.USERNAME_FIELD}")
+    def set_username(self, request, *args, **kwargs):
+        return
+
+    @action([], detail=False, url_path=f"reset_{User.USERNAME_FIELD}")
+    def reset_username(self, request, *args, **kwargs):
+        return
+
+    @action([], detail=False, url_path=f"reset_{User.USERNAME_FIELD}_confirm")
+    def reset_username_confirm(self, request, *args, **kwargs):
+        return
 
 
 # Ver perfil
@@ -333,7 +346,8 @@ def get_trip_driver(request, id_trip):
             )
             .only(
                 'passenger',
-                'pickup_point',
+                'pickup_point_lat',
+                'pickup_point_long',
                 'seats',
                 'is_confirmed',
                 'passenger__phone_number',
@@ -360,7 +374,13 @@ def trip_history_driver(request):
     current_datetime = timezone.now()
 
     queryset = Trip.objects.only(
-        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+        'id_trip',
+        'start_date',
+        'start_time',
+        'starting_point_lat',
+        'starting_point_long',
+        'arrival_point_lat',
+        'arrival_point_long',
     ).annotate(
         start_datetime=ExpressionWrapper(
             F('start_date') + F('start_time'), output_field=DateTimeField()
@@ -389,7 +409,15 @@ def planned_trips_driver(request):
     current_datetime = timezone.now()
 
     queryset = Trip.objects.only(
-        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+        'id_trip',
+        'start_date',
+        'start_time',
+        'starting_point_lat',
+        'starting_point_long',
+        'arrival_point_lat',
+        'arrival_point_long',
+        'seats',
+        'fare',
     ).annotate(
         start_datetime=ExpressionWrapper(
             F('start_date') + F('start_time'), output_field=DateTimeField()
@@ -405,8 +433,8 @@ def planned_trips_driver(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    serializer = ViewTripReduceSerializer(paginated_results, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    content = [planned_trips_driver_serializer(item) for item in paginated_results]
+    return paginator.get_paginated_response(content)
 
 
 # Obtener viaje actual
@@ -483,7 +511,8 @@ def get_trip_passenger_associated(request, id_trip):
     user = request.user
     try:
         passenger_Trip = Passenger_Trip.objects.only(
-            'pickup_point',
+            'pickup_point_lat',
+            'pickup_point_long',
             'seats',
             'is_confirmed',
         ).get(trip=id_trip, passenger=user.id_user)
@@ -498,8 +527,10 @@ def get_trip_passenger_associated(request, id_trip):
             .only(
                 'start_date',
                 'start_time',
-                'starting_point',
-                'arrival_point',
+                'starting_point_lat',
+                'starting_point_long',
+                'arrival_point_lat',
+                'arrival_point_long',
                 'seats',
                 'fare',
                 'current_trip',
@@ -609,8 +640,10 @@ def trip_history_passenger(request):
             'trip',
             'trip__start_date',
             'trip__start_time',
-            'trip__starting_point',
-            'trip__arrival_point',
+            'trip__starting_point_lat',
+            'trip__starting_point_long',
+            'trip__arrival_point_lat',
+            'trip__arrival_point_long',
         )
         .annotate(
             start_datetime=ExpressionWrapper(

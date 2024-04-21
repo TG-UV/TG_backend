@@ -309,6 +309,21 @@ class ViewTripReduceSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    starting_point = serializers.SerializerMethodField()
+    arrival_point = serializers.SerializerMethodField()
+
+    def get_starting_point(self, obj):
+        return {
+            'lat': obj.starting_point_lat,
+            'long': obj.starting_point_long,
+        }
+
+    def get_arrival_point(self, obj):
+        return {
+            'lat': obj.arrival_point_lat,
+            'long': obj.arrival_point_long,
+        }
+
 
 class ViewTripSerializer(serializers.ModelSerializer):
     class Meta:
@@ -328,6 +343,20 @@ class ViewTripSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     driver = ViewUserReduceSerializer()
+    starting_point = serializers.SerializerMethodField()
+    arrival_point = serializers.SerializerMethodField()
+
+    def get_starting_point(self, obj):
+        return {
+            'lat': obj.starting_point_lat,
+            'long': obj.starting_point_long,
+        }
+
+    def get_arrival_point(self, obj):
+        return {
+            'lat': obj.arrival_point_lat,
+            'long': obj.arrival_point_long,
+        }
 
 
 class ViewTripDriverSerializer(serializers.ModelSerializer):
@@ -371,6 +400,13 @@ class ViewPassenger_TripSerializerForDriver(serializers.ModelSerializer):
         read_only_fields = fields
 
     passenger = ViewUserReduceSerializer()
+    pickup_point = serializers.SerializerMethodField()
+
+    def get_pickup_point(self, obj):
+        return {
+            'lat': obj.pickup_point_lat,
+            'long': obj.pickup_point_long,
+        }
 
 
 class ViewPassenger_TripSerializerForPassenger(serializers.ModelSerializer):
@@ -385,12 +421,44 @@ class ViewPassenger_TripSerializerForPassenger(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    pickup_point = serializers.SerializerMethodField()
+
+    def get_pickup_point(self, obj):
+        return {
+            'lat': obj.pickup_point_lat,
+            'long': obj.pickup_point_long,
+        }
+
 
 def serialize_passenger_trip(passenger_Trip: Passenger_Trip) -> Dict[str, Any]:
     return {
         'id_trip': passenger_Trip.trip.id_trip,
         'start_date': passenger_Trip.trip.start_date,
         'start_time': passenger_Trip.trip.start_time,
-        'starting_point': passenger_Trip.trip.starting_point,
-        'arrival_point': passenger_Trip.trip.arrival_point,
+        'starting_point': {
+            'lat': passenger_Trip.trip.starting_point_lat,
+            'long': passenger_Trip.trip.starting_point_long,
+        },
+        'arrival_point': {
+            'lat': passenger_Trip.trip.arrival_point_lat,
+            'long': passenger_Trip.trip.arrival_point_long,
+        },
+    }
+
+
+def planned_trips_driver_serializer(trip: Trip) -> Dict[str, Any]:
+    return {
+        'id_trip': trip.id_trip,
+        'start_date': trip.start_date,
+        'start_time': trip.start_time,
+        'starting_point': {
+            'lat': trip.starting_point_lat,
+            'long': trip.starting_point_long,
+        },
+        'arrival_point': {
+            'lat': trip.arrival_point_lat,
+            'long': trip.arrival_point_long,
+        },
+        'seats': trip.seats,
+        'fare': trip.fare,
     }

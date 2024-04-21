@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from api import error_messages
+from decimal import Decimal
 
 
 ALLOWED_EMAIL_DOMAIN = 'correounivalle.edu.co'
@@ -74,3 +75,13 @@ def validate_email_domain(email):
                 'new_email': error_messages.EMAIL_DOMAIN_NOT_ALLOWED,
             }
         )
+
+
+def validate_latitude(latitude):
+    if latitude > Decimal('90.000000') or latitude < Decimal('-90.000000'):
+        raise ValidationError(error_messages.INVALID_LATITUDE)
+
+
+def validate_longitude(longitude):
+    if longitude > Decimal('180.000000') or longitude < Decimal('-180.000000'):
+        raise ValidationError(error_messages.INVALID_LONGITUDE)
