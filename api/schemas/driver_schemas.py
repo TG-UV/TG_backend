@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from drf_spectacular.utils import OpenApiExample, inline_serializer
-from api.serializers import VehicleSerializer, TripSerializer
-
+from api.serializers.vehicle import VehicleSerializer
+from api.serializers.trip import TripSerializer
 
 add_vehicle_schema = {
     'description': 'Vista para registrar un vehículo (requiere token).',

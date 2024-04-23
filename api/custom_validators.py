@@ -4,7 +4,7 @@ from api import error_messages
 from decimal import Decimal
 
 
-ALLOWED_EMAIL_DOMAIN = 'correounivalle.edu.co'
+ALLOWED_EMAIL_DOMAIN = '@correounivalle.edu.co'
 
 
 def validate_date_of_birth(date_of_birth):

@@ -12,7 +12,7 @@ view_trip_serializer_for_passenger = inline_serializer(
     },
 )
 
-get_trip_passenger_associated = {
+get_trip_associated_schema = {
     'description': 'Detalles de un viaje (requiere token).',
     'responses': {
         200: view_trip_serializer_for_passenger,
@@ -49,7 +49,7 @@ get_trip_passenger_associated = {
                     },
                 },
             },
-            description='En este ejemplo el id de la url es 1: .../passenger/trip/1/.',
+            description='En este ejemplo el id de la url es 1: .../passenger/trip/associated/1/.',
         ),
     ],
 }

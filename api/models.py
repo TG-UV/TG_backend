@@ -1,4 +1,4 @@
-import re
+import string
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -91,8 +91,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         # Da formato a algunos campos antes de guardar.
-        self.first_name = re.sub(r' {2,}', ' ', self.first_name)
-        self.last_name = re.sub(r' {2,}', ' ', self.last_name)
+        self.first_name = string.capwords(self.first_name)
+        self.last_name = string.capwords(self.last_name)
         super().save(*args, **kwargs)
 
     def __str__(self):
