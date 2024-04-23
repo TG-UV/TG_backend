@@ -219,57 +219,14 @@ add_trip_schema = {
 }
 
 
-update_trip_schema = {
-    'description': 'Vista para actualizar los datos de un viaje (requiere token).',
-    'request': {
-        'application/json': TripSerializer,
-    },
+delete_trip_schema = {
+    'description': 'Vista para eliminar un viaje (requiere token).',
     'responses': {
-        200: TripSerializer,
+        204: inline_serializer(
+            name="TripDeleted",
+            fields={},
+        ),
     },
-    'examples': [
-        OpenApiExample(
-            "Update trip PUT request",
-            value={
-                "start_date": "2024-04-02",
-                "start_time": "07:00:00",
-                "starting_point": "Palmira",
-                "arrival_point": "Univalle",
-                "seats": 4,
-                "fare": 10000,
-                "current_trip": False,
-                "driver": 3,
-                "vehicle": 21,
-            },
-            request_only=True,
-        ),
-        OpenApiExample(
-            "Update trip PATCH request",
-            value={
-                "seats": 2,
-                "current_trip": True,
-            },
-            request_only=True,
-        ),
-        OpenApiExample(
-            "Update trip response",
-            value={
-                "id_trip": "1",
-                "start_date": "2024-04-02",
-                "start_time": "07:00:00",
-                "starting_point": "Palmira",
-                "arrival_point": "Univalle",
-                "seats": 4,
-                "fare": 10000,
-                "current_trip": False,
-                "driver": 3,
-                "vehicle": 21,
-            },
-            description='En este ejemplo el viaje con id 1 fue actualizado, la url sería: '
-            + '.../driver/trip/update/1/.',
-            response_only=True,
-        ),
-    ],
 }
 
 
