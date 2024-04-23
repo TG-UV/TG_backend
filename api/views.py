@@ -447,7 +447,13 @@ def current_trip(request):
     two_hours_ago = timezone.now() - timedelta(hours=2)
 
     queryset = Trip.objects.only(
-        'id_trip', 'start_date', 'start_time', 'starting_point', 'arrival_point'
+        'id_trip',
+        'start_date',
+        'start_time',
+        'starting_point_lat',
+        'starting_point_long',
+        'arrival_point_lat',
+        'arrival_point_long',
     ).annotate(
         start_datetime=ExpressionWrapper(
             F('start_date') + F('start_time'), output_field=DateTimeField()
@@ -680,8 +686,10 @@ def planned_trips_passenger(request):
             'trip',
             'trip__start_date',
             'trip__start_time',
-            'trip__starting_point',
-            'trip__arrival_point',
+            'trip__starting_point_lat',
+            'trip__starting_point_long',
+            'trip__arrival_point_lat',
+            'trip__arrival_point_long',
         )
         .annotate(
             start_datetime=ExpressionWrapper(
