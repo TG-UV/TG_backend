@@ -1,16 +1,14 @@
 from rest_framework import viewsets, permissions
-from .serializers import (
-    UserTypeSerializer,
-    CitySerializer,
-    ExtendedUserSerializer,
-    VehicleColorSerializer,
-    VehicleBrandSerializer,
-    VehicleTypeSerializer,
-    VehicleModelSerializer,
-    VehicleSerializer,
-    TripSerializer,
-    Passenger_TripSerializer,
-)
+from .serializers.user_type import UserTypeSerializer
+from .serializers.city import CitySerializer
+from .serializers.user import ExtendedUserSerializer
+from .serializers.vehicle_color import VehicleColorSerializer
+from .serializers.vehicle_brand import VehicleBrandSerializer
+from .serializers.vehicle_type import VehicleTypeSerializer
+from .serializers.vehicle_model import VehicleModelSerializer
+from .serializers.vehicle import VehicleSerializer
+from .serializers.trip import TripSerializer
+from .serializers.passenger_trip import Passenger_TripSerializer
 from .models import (
     UserType,
     City,
