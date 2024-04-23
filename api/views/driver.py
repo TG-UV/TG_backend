@@ -328,30 +328,16 @@ def current_trip(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Actualizar viaje
-@extend_schema(**driver_schemas.update_trip_schema)
-@api_view(['PATCH', 'PUT'])
+# Eliminar viaje
+@extend_schema(**driver_schemas.delete_trip_schema)
+@api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsDriver])
-def update_trip(request, id_trip):
+def delete_trip(request, id_trip):
     user = request.user
-    trip_data = request.data
-
     try:
         trip = Trip.objects.get(id_trip=id_trip, driver=user.id_user)
-
-        '''El conductor debe ser el mismo usuario que realiza la petición.'''
-        trip_data['driver'] = user.id_user
-
-        '''Si el método es PUT debe tener todos los campos.'''
-        partial = False if request.method == 'PUT' else True
-
-        serializer = TripSerializer(trip, data=trip_data, partial=partial)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        trip.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     except Trip.DoesNotExist:
         return Response(
