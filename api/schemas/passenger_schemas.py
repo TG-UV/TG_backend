@@ -53,3 +53,13 @@ get_trip_associated_schema = {
         ),
     ],
 }
+
+delete_passenger_trip_schema = {
+    'description': 'Vista para eliminar una reserva de viaje (requiere token).',
+    'responses': {
+        204: inline_serializer(
+            name="TripDeleted",
+            fields={},
+        ),
+    },
+}

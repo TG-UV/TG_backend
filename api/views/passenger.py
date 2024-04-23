@@ -217,3 +217,25 @@ def planned_trips(request):
     paginated_results = paginator.paginate_queryset(queryset, request)
     content = [passenger_trip_passenger_serializer(item) for item in paginated_results]
     return paginator.get_paginated_response(content)
+
+
+from django.db import connection
+print(connection.queries)
+# Eliminar una reserva
+@extend_schema(**passenger_schemas.delete_passenger_trip_schema)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsPassenger])
+def delete_trip_reservation(request, id_trip):
+    user = request.user
+    try:
+        passenger_trip = Passenger_Trip.objects.get(trip=id_trip, passenger=user.id_user)
+        passenger_trip.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    except Passenger_Trip.DoesNotExist:
+        return Response(
+            {'error': error_messages.PASSENGER_IS_NOT_ON_THE_TRIP},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    finally:
+        [print(item) for item in connection.queries]

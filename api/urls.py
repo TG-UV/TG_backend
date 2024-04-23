@@ -57,6 +57,7 @@ urlpatterns = [
     path('driver/home/', general.home, name='home_driver'),
     path('passenger/trip/history/', passenger.trip_history, name='trip_history_passenger'),
     path('passenger/trip/planned/', passenger.planned_trips, name='planned_trips_passenger'),
+    path('passenger/trip/delete/<int:id_trip>/', passenger.delete_trip_reservation, name='delete_trip_reservation'),
     path('passenger/trip/associated/<int:id_trip>/', passenger.get_trip_associated, name='get_associated_trip_passenger'),
     path('passenger/trip/<int:id_trip>/', passenger.get_trip, name='get_trip_passenger'),
     path('passenger/home/', general.home, name='home_passenger'),
