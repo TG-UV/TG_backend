@@ -4,13 +4,13 @@ from rest_framework.decorators import api_view, permission_classes
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from api.serializers.city import CitySerializer
-from api.models import City
 from api.schemas import registration_schemas
 from api.serializers.vehicle_color import VehicleColorSerializer
 from api.serializers.vehicle_brand import VehicleBrandSerializer
 from api.serializers.vehicle_type import VehicleTypeSerializer
 from api.serializers.vehicle_model import VehicleModelSerializer
 from api.models import (
+    City,
     VehicleColor,
     VehicleBrand,
     VehicleType,
