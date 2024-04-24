@@ -171,7 +171,7 @@ def trip_history(request):
         start_datetime__lt=current_datetime, passenger=user.id_user
     ).order_by(
         '-start_datetime'
-    )  # lt signifia less than.
+    )  # lt significa less than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
@@ -210,7 +210,7 @@ def planned_trips(request):
         start_datetime__gt=current_datetime, passenger=user.id_user
     ).order_by(
         'start_datetime'
-    )  # gt signifia greater than.
+    )  # gt significa greater than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
@@ -219,16 +219,16 @@ def planned_trips(request):
     return paginator.get_paginated_response(content)
 
 
-from django.db import connection
-print(connection.queries)
 # Eliminar una reserva
-@extend_schema(**passenger_schemas.delete_passenger_trip_schema)
+@extend_schema(**passenger_schemas.delete_trip_reservation_schema)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsPassenger])
 def delete_trip_reservation(request, id_trip):
     user = request.user
     try:
-        passenger_trip = Passenger_Trip.objects.get(trip=id_trip, passenger=user.id_user)
+        passenger_trip = Passenger_Trip.objects.get(
+            trip=id_trip, passenger=user.id_user
+        )
         passenger_trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -237,5 +237,3 @@ def delete_trip_reservation(request, id_trip):
             {'error': error_messages.PASSENGER_IS_NOT_ON_THE_TRIP},
             status=status.HTTP_404_NOT_FOUND,
         )
-    finally:
-        [print(item) for item in connection.queries]

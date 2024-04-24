@@ -247,7 +247,7 @@ def trip_history(request):
         start_datetime__lt=current_datetime, driver=user.id_user
     ).order_by(
         '-start_datetime'
-    )  # lt signifia less than.
+    )  # lt significa less than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
@@ -283,7 +283,7 @@ def planned_trips(request):
         start_datetime__gt=current_datetime, driver=user.id_user
     ).order_by(
         'start_datetime'
-    )  # gt signifia greater than.
+    )  # gt significa greater than.
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
@@ -322,7 +322,7 @@ def current_trip(request):
         )
         .order_by('-start_datetime')
         .first()
-    )  # lte signifia less than equal.
+    )  # lte significa less than equal.
 
     serializer = ViewTripReduceSerializer(queryset)
     return Response(serializer.data, status=status.HTTP_200_OK)

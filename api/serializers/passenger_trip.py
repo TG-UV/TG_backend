@@ -56,18 +56,18 @@ class ViewPassenger_TripSerializer(ViewPassenger_TripReduceSerializer):
 
 
 def passenger_trip_passenger_serializer(
-    passenger_Trip: Passenger_Trip,
+    passenger_trip: Passenger_Trip,
 ) -> Dict[str, Any]:
     return {
-        'id_trip': passenger_Trip.trip.id_trip,
-        'start_date': passenger_Trip.trip.start_date,
-        'start_time': passenger_Trip.trip.start_time,
+        'id_trip': passenger_trip.trip.id_trip,
+        'start_date': passenger_trip.trip.start_date,
+        'start_time': passenger_trip.trip.start_time,
         'starting_point': {
-            'lat': passenger_Trip.trip.starting_point_lat,
-            'long': passenger_Trip.trip.starting_point_long,
+            'lat': passenger_trip.trip.starting_point_lat,
+            'long': passenger_trip.trip.starting_point_long,
         },
         'arrival_point': {
-            'lat': passenger_Trip.trip.arrival_point_lat,
-            'long': passenger_Trip.trip.arrival_point_long,
+            'lat': passenger_trip.trip.arrival_point_lat,
+            'long': passenger_trip.trip.arrival_point_long,
         },
     }
