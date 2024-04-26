@@ -8,7 +8,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db.models import F, DateTimeField, ExpressionWrapper
-from datetime import datetime
 from django.utils import timezone
 from rest_framework.response import Response
 from api.serializers.vehicle import ViewVehicleReduceSerializer
@@ -254,30 +253,16 @@ def search_route(request):
     trip_data = request.data
     errors = {}
 
-    # Parámetros de búsqueda
+    # Parámetros de búsqueda.
     trip = TripSearchSerializer(data=trip_data, partial=True)
 
-    # Validaciones
+    # Validaciones.
     if trip.is_valid():
         current_datetime = timezone.now()
 
-        start_time = trip_data.get('start_time', None)
-
-        # Si no se proporciona fecha u hora, se asigna la hora o la fecha actual.
-        if start_time:
-            start_time = datetime.strptime(start_time, '%H:%M:%S').time()
-        else:
-            start_time = current_datetime.time()
-
-        start_date = trip_data.get('start_date', None)
-
-        if start_date:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-        else:
-            start_date = current_datetime.date()
-
-        start_datetime = datetime.combine(start_date, start_time)
-
+        # Si no se proporciona fecha, hora o puestos, se asignan valores por defecto.
+        start_time = trip_data.get('start_time', current_datetime.time())
+        start_date = trip_data.get('start_date', current_datetime.date())
         seats = trip_data.get('seats', 1)
 
         starting_point_lat = trip_data['starting_point_lat']
@@ -299,14 +284,6 @@ def search_route(request):
         comes_from_the_u = point_inside_polygon(starting_point, univalle)
         goes_to_the_u = point_inside_polygon(arrival_point, univalle)
 
-        direction = ''
-
-        if goes_to_the_u:
-            direction = 'Va para la u'
-
-        if comes_from_the_u:
-            direction = 'Viene de la u'
-
         if not comes_from_the_u and not goes_to_the_u:
             errors['error'] = error_messages.PASSENGER_MUST_GO_TO_OR_COME_FROM_UV
 
@@ -327,31 +304,49 @@ def search_route(request):
             'seats',
             'fare',
         )
-        .annotate(
-            start_datetime=ExpressionWrapper(
-                F('start_date') + F('start_time'), output_field=DateTimeField()
-            )
-        )
-        .filter(start_datetime__gte=start_datetime, seats__gte=seats)
-        .order_by('start_datetime')
+        .filter(start_date=start_date, start_time__gte=start_time, seats__gte=seats)
+        .order_by('start_time')
     )  # gte significa greater than equal.
+
+    results = []
+    direction = ''
+
+    if goes_to_the_u:
+        # Selecciona aquellos viajes que van a la universidad
+        direction = 'Viajes hacia la universidad'
+
+        for item in queryset:
+            if point_inside_polygon(
+                [item.arrival_point_long, item.arrival_point_lat], univalle
+            ):
+                results.append(item)
+
+    else:
+        # Selecciona aquellos viajes que salen desde la universidad
+        direction = 'Viajes desde la universidad'
+
+        for item in queryset:
+            if point_inside_polygon(
+                [item.starting_point_long, item.starting_point_lat], univalle
+            ):
+                results.append(item)
 
     content = [
         {
-            'count': queryset.count(),
+            'count': len(results),
             'direction': direction,
-            'results': [planned_trips_serializer(item) for item in queryset],
+            'results': [planned_trips_serializer(item) for item in results],
         }
     ]
+
     return Response(content, status=status.HTTP_200_OK)
 
-''' 
+
+'''
     starting_point = [
         Decimal(f'{-76.537502}'),
         Decimal(f'{3.380173}'),
     ]
-
-    isUnivalle = point_inside_polygon(starting_point, univalle)
 
     
     MAPBOX_KEY = settings.MAPBOX_KEY
@@ -393,10 +388,11 @@ def search_route(request):
             point.append(Decimal(f'{distance}'))
 
         return Response(
-            {'ruta': route, 'va para la U': isUnivalle}, status=status.HTTP_200_OK
+            {'ruta': route}, status=status.HTTP_200_OK
         )
     else:
         message = data.get('message', None)
         error = message if message else error_messages.NO_ROUTE_FOUND
         return Response({'error': error}, status=status.HTTP_404_NOT_FOUND)
+    
 '''

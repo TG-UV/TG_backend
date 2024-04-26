@@ -27,12 +27,10 @@ def ray_casting_algorithm(point, polygon):
 def point_inside_polygon(point, polygon):
     x, y = point
     n = len(polygon)
-    inside = False
 
     for i in range(n):
         if x == polygon[i][0] and y == polygon[i][1]:
-            inside = True
-            return inside
+            return True
 
     return ray_casting_algorithm(point, polygon)
 
