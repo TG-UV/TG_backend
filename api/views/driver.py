@@ -15,7 +15,7 @@ from api.serializers.vehicle import (
 from api.serializers.trip import (
     TripSerializer,
     ViewTripReduceSerializer,
-    planned_trips_driver_serializer,
+    planned_trips_serializer,
 )
 from api.serializers.passenger_trip import ViewPassenger_TripSerializer
 from api.models import Vehicle, Trip, Passenger_Trip
@@ -288,7 +288,7 @@ def planned_trips(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    content = [planned_trips_driver_serializer(item) for item in paginated_results]
+    content = [planned_trips_serializer(item) for item in paginated_results]
     return paginator.get_paginated_response(content)
 
 

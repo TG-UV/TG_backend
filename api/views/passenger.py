@@ -1,15 +1,22 @@
+from decimal import Decimal
+import requests
+from math import sqrt
+from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db.models import F, DateTimeField, ExpressionWrapper
+from datetime import datetime
 from django.utils import timezone
 from rest_framework.response import Response
 from api.serializers.vehicle import ViewVehicleReduceSerializer
 from api.serializers.trip import (
     ViewTripSerializer,
     ViewTripMinimalSerializer,
+    TripSearchSerializer,
+    planned_trips_serializer,
 )
 from api.serializers.passenger_trip import (
     ViewPassenger_TripReduceSerializer,
@@ -19,6 +26,7 @@ from api.models import Vehicle, Trip, Passenger_Trip
 from api.permissions import IsPassenger
 from api import error_messages
 from api.schemas import passenger_schemas
+from api.utils import point_inside_polygon, univalle
 
 
 # Obtener viaje asociado
@@ -237,3 +245,158 @@ def delete_trip_reservation(request, id_trip):
             {'error': error_messages.PASSENGER_IS_NOT_ON_THE_TRIP},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+
+# Buscar viaje
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsPassenger])
+def search_route(request):
+    trip_data = request.data
+    errors = {}
+
+    # Parámetros de búsqueda
+    trip = TripSearchSerializer(data=trip_data, partial=True)
+
+    # Validaciones
+    if trip.is_valid():
+        current_datetime = timezone.now()
+
+        start_time = trip_data.get('start_time', None)
+
+        # Si no se proporciona fecha u hora, se asigna la hora o la fecha actual.
+        if start_time:
+            start_time = datetime.strptime(start_time, '%H:%M:%S').time()
+        else:
+            start_time = current_datetime.time()
+
+        start_date = trip_data.get('start_date', None)
+
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        else:
+            start_date = current_datetime.date()
+
+        start_datetime = datetime.combine(start_date, start_time)
+
+        seats = trip_data.get('seats', 1)
+
+        starting_point_lat = trip_data['starting_point_lat']
+        starting_point_long = trip_data['starting_point_long']
+        arrival_point_lat = trip_data['arrival_point_lat']
+        arrival_point_long = trip_data['arrival_point_long']
+
+        # Se determina si Univalle es el punto de inicio o de destino.
+        starting_point = [
+            Decimal(f'{starting_point_long}'),
+            Decimal(f'{starting_point_lat}'),
+        ]
+
+        arrival_point = [
+            Decimal(f'{arrival_point_long}'),
+            Decimal(f'{arrival_point_lat}'),
+        ]
+
+        comes_from_the_u = point_inside_polygon(starting_point, univalle)
+        goes_to_the_u = point_inside_polygon(arrival_point, univalle)
+
+        direction = ''
+
+        if goes_to_the_u:
+            direction = 'Va para la u'
+
+        if comes_from_the_u:
+            direction = 'Viene de la u'
+
+        if not comes_from_the_u and not goes_to_the_u:
+            errors['error'] = error_messages.PASSENGER_MUST_GO_TO_OR_COME_FROM_UV
+
+    errors = {**trip.errors, **errors}
+
+    if errors:
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+    queryset = (
+        Trip.objects.only(
+            'id_trip',
+            'start_date',
+            'start_time',
+            'starting_point_lat',
+            'starting_point_long',
+            'arrival_point_lat',
+            'arrival_point_long',
+            'seats',
+            'fare',
+        )
+        .annotate(
+            start_datetime=ExpressionWrapper(
+                F('start_date') + F('start_time'), output_field=DateTimeField()
+            )
+        )
+        .filter(start_datetime__gte=start_datetime, seats__gte=seats)
+        .order_by('start_datetime')
+    )  # gte significa greater than equal.
+
+    content = [
+        {
+            'count': queryset.count(),
+            'direction': direction,
+            'results': [planned_trips_serializer(item) for item in queryset],
+        }
+    ]
+    return Response(content, status=status.HTTP_200_OK)
+
+''' 
+    starting_point = [
+        Decimal(f'{-76.537502}'),
+        Decimal(f'{3.380173}'),
+    ]
+
+    isUnivalle = point_inside_polygon(starting_point, univalle)
+
+    
+    MAPBOX_KEY = settings.MAPBOX_KEY
+
+    starting_point_lat = trip_data['starting_point_lat']
+    starting_point_long = trip_data['starting_point_long']
+    arrival_point_lat = trip_data['arrival_point_lat']
+    arrival_point_long = trip_data['arrival_point_long']
+
+    url = (
+        'https://api.mapbox.com/directions/v5/mapbox/driving/'
+        + f'{starting_point_long},{starting_point_lat};'
+        + f'{arrival_point_long},{arrival_point_lat}/'
+        + '?geometries=geojson&language=es&access_token='
+        + MAPBOX_KEY
+    )
+
+    response = requests.get(url)
+    data = response.json()
+
+    routes = data.get('routes', None)
+
+    if routes:
+        # Si se encontraron rutas, devolver la primera ruta.
+        route = routes[0]['geometry']['coordinates']
+
+        # Cálculo de la distancia entre dos puntos:
+        # raiz( (x2-x1)^2 + (y2-y1)^2 )
+        for point in route:
+            x_distance = (
+                Decimal(f'{pickup_point_long}') - Decimal(f'{point[0]}')
+            ) ** 2
+            y_distance = (
+                Decimal(f'{pickup_point_lat}') - Decimal(f'{point[1]}')
+            ) ** 2
+            suma = Decimal(f'{x_distance}') + Decimal(f'{y_distance}')
+            distance = sqrt(Decimal(f'{suma}'))
+
+            point.append(Decimal(f'{distance}'))
+
+        return Response(
+            {'ruta': route, 'va para la U': isUnivalle}, status=status.HTTP_200_OK
+        )
+    else:
+        message = data.get('message', None)
+        error = message if message else error_messages.NO_ROUTE_FOUND
+        return Response({'error': error}, status=status.HTTP_404_NOT_FOUND)
+'''
