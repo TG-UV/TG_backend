@@ -81,7 +81,21 @@ class ViewTripMinimalSerializer(serializers.ModelSerializer):
     driver = ViewUserReduceSerializer()
 
 
-def planned_trips_driver_serializer(trip: Trip) -> Dict[str, Any]:
+class TripSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trip
+        fields = (
+            'start_date',
+            'start_time',
+            'starting_point_lat',
+            'starting_point_long',
+            'arrival_point_lat',
+            'arrival_point_long',
+            'seats',
+        )
+
+
+def planned_trips_serializer(trip: Trip) -> Dict[str, Any]:
     return {
         'id_trip': trip.id_trip,
         'start_date': trip.start_date,

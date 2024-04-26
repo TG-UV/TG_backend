@@ -171,6 +171,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+MAPBOX_KEY = os.environ.get('MAPBOX_KEY')
 
 PRODUCTION = 'PRODUCTION' in os.environ
 
@@ -195,7 +196,7 @@ if ACTIVATE_EMAIL:
     DJOSER['TOKEN_MODEL'] = 'rest_framework.authtoken.models.Token'
 
     # email
-    #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST')
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_API_KEY')
