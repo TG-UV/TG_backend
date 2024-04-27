@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, localcontext
 import requests
 from math import sqrt
 from django.conf import settings
@@ -246,6 +246,9 @@ def delete_trip_reservation(request, id_trip):
         )
 
 
+from decimal import getcontext
+
+
 # Buscar viaje
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsPassenger])
@@ -271,18 +274,18 @@ def search_route(request):
         arrival_point_long = trip_data['arrival_point_long']
 
         # Se determina si Univalle es el punto de inicio o de destino.
-        starting_point = [
+        starting_point_search = [
             Decimal(f'{starting_point_long}'),
             Decimal(f'{starting_point_lat}'),
         ]
 
-        arrival_point = [
+        arrival_point_search = [
             Decimal(f'{arrival_point_long}'),
             Decimal(f'{arrival_point_lat}'),
         ]
 
-        comes_from_the_u = point_inside_polygon(starting_point, univalle)
-        goes_to_the_u = point_inside_polygon(arrival_point, univalle)
+        comes_from_the_u = point_inside_polygon(starting_point_search, univalle)
+        goes_to_the_u = point_inside_polygon(arrival_point_search, univalle)
 
         if not comes_from_the_u and not goes_to_the_u:
             errors['error'] = error_messages.PASSENGER_MUST_GO_TO_OR_COME_FROM_UV
@@ -319,7 +322,30 @@ def search_route(request):
             if point_inside_polygon(
                 [item.arrival_point_long, item.arrival_point_lat], univalle
             ):
-                results.append(item)
+                starting_point = [
+                    Decimal(f'{item.starting_point_long}'),
+                    Decimal(f'{item.starting_point_lat}'),
+                ]
+
+                arrival_point = [
+                    Decimal(f'{item.arrival_point_long}'),
+                    Decimal(f'{item.arrival_point_lat}'),
+                ]
+
+                route = get_route(starting_point, arrival_point)
+
+                for point in route:
+                    # Establece 4 dígitos de precisión para los cálculos de distancia.
+                    with localcontext() as ctx:
+                        ctx.prec = 4
+                        distance_between = distance(starting_point_search, point)
+                        point.append(Decimal(f'{distance_between}'))
+
+                minimum = min(route, key=lambda x: x[2])
+                trip_serializer = planned_trips_serializer(item)
+                trip_serializer['closest_point'] = minimum
+                # trip_serializer['ruta'] = route
+                results.append(trip_serializer)
 
     else:
         # Selecciona aquellos viajes que salen desde la universidad
@@ -329,37 +355,54 @@ def search_route(request):
             if point_inside_polygon(
                 [item.starting_point_long, item.starting_point_lat], univalle
             ):
-                results.append(item)
+                starting_point = [
+                    Decimal(f'{item.starting_point_long}'),
+                    Decimal(f'{item.starting_point_lat}'),
+                ]
+
+                arrival_point = [
+                    Decimal(f'{item.arrival_point_long}'),
+                    Decimal(f'{item.arrival_point_lat}'),
+                ]
+
+                route = get_route(starting_point, arrival_point)
+
+                for point in route:
+                    # Establece 4 dígitos de precisión para los cálculos de distancia.
+                    with localcontext() as ctx:
+                        ctx.prec = 4
+                        distance_between = distance(arrival_point_search, point)
+                        point.append(Decimal(f'{distance_between}'))
+
+                minimum = min(route, key=lambda x: x[2])
+                trip_serializer = planned_trips_serializer(item)
+                trip_serializer['closest_point'] = minimum
+                # trip_serializer['ruta'] = route
+                results.append(trip_serializer)
+
+    sorted_results = []
+
+    if results:
+        sorted_results = sorted(results, key=lambda x: x['closest_point'][2])
 
     content = [
         {
             'count': len(results),
             'direction': direction,
-            'results': [planned_trips_serializer(item) for item in results],
+            'results': sorted_results,
         }
     ]
 
     return Response(content, status=status.HTTP_200_OK)
 
 
-'''
-    starting_point = [
-        Decimal(f'{-76.537502}'),
-        Decimal(f'{3.380173}'),
-    ]
-
-    
+def get_route(starting_point, arrival_point):
     MAPBOX_KEY = settings.MAPBOX_KEY
-
-    starting_point_lat = trip_data['starting_point_lat']
-    starting_point_long = trip_data['starting_point_long']
-    arrival_point_lat = trip_data['arrival_point_lat']
-    arrival_point_long = trip_data['arrival_point_long']
 
     url = (
         'https://api.mapbox.com/directions/v5/mapbox/driving/'
-        + f'{starting_point_long},{starting_point_lat};'
-        + f'{arrival_point_long},{arrival_point_lat}/'
+        + f'{starting_point[0]},{starting_point[1]};'
+        + f'{arrival_point[0]},{arrival_point[1]}/'
         + '?geometries=geojson&language=es&access_token='
         + MAPBOX_KEY
     )
@@ -372,27 +415,16 @@ def search_route(request):
     if routes:
         # Si se encontraron rutas, devolver la primera ruta.
         route = routes[0]['geometry']['coordinates']
-
-        # Cálculo de la distancia entre dos puntos:
-        # raiz( (x2-x1)^2 + (y2-y1)^2 )
-        for point in route:
-            x_distance = (
-                Decimal(f'{pickup_point_long}') - Decimal(f'{point[0]}')
-            ) ** 2
-            y_distance = (
-                Decimal(f'{pickup_point_lat}') - Decimal(f'{point[1]}')
-            ) ** 2
-            suma = Decimal(f'{x_distance}') + Decimal(f'{y_distance}')
-            distance = sqrt(Decimal(f'{suma}'))
-
-            point.append(Decimal(f'{distance}'))
-
-        return Response(
-            {'ruta': route}, status=status.HTTP_200_OK
-        )
+        return route
     else:
-        message = data.get('message', None)
-        error = message if message else error_messages.NO_ROUTE_FOUND
-        return Response({'error': error}, status=status.HTTP_404_NOT_FOUND)
-    
-'''
+        return []
+
+
+# Cálculo de la distancia entre dos puntos:
+# raiz( (x2-x1)^2 + (y2-y1)^2 )
+def distance(A, B):
+    x_distance = (Decimal(f'{B[0]}') - Decimal(f'{A[0]}')) ** 2
+    y_distance = (Decimal(f'{B[1]}') - Decimal(f'{A[1]}')) ** 2
+    suma = x_distance + y_distance
+    distance = Decimal(f'{(suma.sqrt())}')
+    return distance
