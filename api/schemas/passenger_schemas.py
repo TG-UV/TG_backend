@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from drf_spectacular.utils import OpenApiExample, inline_serializer
+from api.serializers.passenger_trip import Passenger_TripSerializer
 
 view_trip_serializer_for_passenger = inline_serializer(
     name="ViewTripForPassenger",
@@ -62,4 +63,40 @@ delete_trip_reservation_schema = {
             fields={},
         ),
     },
+}
+
+book_trip_schema = {
+    'description': 'Vista para reservar un viaje (requiere token).',
+    'request': {
+        'application/json': Passenger_TripSerializer,
+    },
+    'responses': {
+        201: Passenger_TripSerializer,
+    },
+    'examples': [
+        OpenApiExample(
+            "Book trip request",
+            value={
+                "pickup_point_lat": "3.375462",
+                "pickup_point_long": "-76.533166",
+                "seats": 1,
+                "trip": 1,
+            },
+            request_only=True,
+        ),
+        OpenApiExample(
+            "Book trip response",
+            value={
+                "id_passenger_trip": 1,
+                "pickup_point_lat": "3.375462",
+                "pickup_point_long": "-76.533166",
+                "seats": 1,
+                "is_confirmed": False,
+                "trip": 1,
+                "passenger": 1,
+            },
+            description='En este ejemplo el viaje fue reservado por el usuario de id 1.',
+            response_only=True,
+        ),
+    ],
 }

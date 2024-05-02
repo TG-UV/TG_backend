@@ -1,12 +1,12 @@
 from decimal import Decimal, localcontext
 import requests
-from math import sqrt
 from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
+from django.db import IntegrityError
 from django.db.models import F, DateTimeField, ExpressionWrapper
 from django.utils import timezone
 from rest_framework.response import Response
@@ -18,6 +18,7 @@ from api.serializers.trip import (
     planned_trips_serializer,
 )
 from api.serializers.passenger_trip import (
+    Passenger_TripSerializer,
     ViewPassenger_TripReduceSerializer,
     passenger_trip_passenger_serializer,
 )
@@ -25,7 +26,7 @@ from api.models import Vehicle, Trip, Passenger_Trip
 from api.permissions import IsPassenger
 from api import error_messages
 from api.schemas import passenger_schemas
-from api.utils import point_inside_polygon, univalle
+from api.utils import point_inside_polygon, univalle, distance
 
 
 # Obtener viaje asociado
@@ -226,6 +227,31 @@ def planned_trips(request):
     return paginator.get_paginated_response(content)
 
 
+# Reservar un viaje
+@extend_schema(**passenger_schemas.book_trip_schema)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsPassenger])
+def book_trip(request):
+    user = request.user
+    passenger_trip_data = request.data
+    '''El pasajero debe ser el mismo usuario que realiza la petición.'''
+    passenger_trip_data['passenger'] = user.id_user
+
+    passenger_trip = Passenger_TripSerializer(data=passenger_trip_data)
+
+    if passenger_trip.is_valid():
+        try:
+            passenger_trip.save()
+            return Response(passenger_trip.data, status=status.HTTP_201_CREATED)
+
+        except IntegrityError:
+            content = {'error': error_messages.PASSENGER_HAS_ALREADY_BOOKED}
+            return Response(content, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        return Response(passenger_trip.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # Eliminar una reserva
 @extend_schema(**passenger_schemas.delete_trip_reservation_schema)
 @api_view(['DELETE'])
@@ -233,9 +259,15 @@ def planned_trips(request):
 def delete_trip_reservation(request, id_trip):
     user = request.user
     try:
-        passenger_trip = Passenger_Trip.objects.get(
+        passenger_trip = Passenger_Trip.objects.only('seats', 'is_confirmed').get(
             trip=id_trip, passenger=user.id_user
         )
+
+        # Si la reserva ya estaba confirmada se restablecen los puestos separados.
+        if passenger_trip.is_confirmed:
+            trip = Trip.objects.filter(id_trip=id_trip)
+            trip.update(seats=F('seats') + passenger_trip.seats)
+
         passenger_trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -246,12 +278,9 @@ def delete_trip_reservation(request, id_trip):
         )
 
 
-from decimal import getcontext
-
-
 # Buscar viaje
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsPassenger])
+@permission_classes([IsAuthenticated])
 def search_route(request):
     trip_data = request.data
     errors = {}
@@ -418,13 +447,3 @@ def get_route(starting_point, arrival_point):
         return route
     else:
         return []
-
-
-# Cálculo de la distancia entre dos puntos:
-# raiz( (x2-x1)^2 + (y2-y1)^2 )
-def distance(A, B):
-    x_distance = (Decimal(f'{B[0]}') - Decimal(f'{A[0]}')) ** 2
-    y_distance = (Decimal(f'{B[1]}') - Decimal(f'{A[1]}')) ** 2
-    suma = x_distance + y_distance
-    distance = Decimal(f'{(suma.sqrt())}')
-    return distance
