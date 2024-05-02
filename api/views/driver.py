@@ -335,12 +335,37 @@ def current_trip(request):
 def delete_trip(request, id_trip):
     user = request.user
     try:
-        trip = Trip.objects.get(id_trip=id_trip, driver=user.id_user)
+        trip = Trip.objects.only('id_trip').get(id_trip=id_trip, driver=user.id_user)
         trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     except Trip.DoesNotExist:
         return Response(
             {'error': error_messages.TRIP_DOES_NOT_EXIST},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
+# Descartar reserva hecha por un pasajero
+@extend_schema(**driver_schemas.delete_passenger_trip_schema)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsDriver])
+def delete_passenger_trip(request, id_passenger_trip):
+    try:
+        passenger_trip = Passenger_Trip.objects.only(
+            'seats', 'is_confirmed', 'trip_id'
+        ).get(id_passenger_trip=id_passenger_trip)
+
+        # Si la reserva ya estaba confirmada se restablecen los puestos separados.
+        if passenger_trip.is_confirmed:
+            trip = Trip.objects.filter(id_trip=passenger_trip.trip_id)
+            trip.update(seats=F('seats') + passenger_trip.seats)
+
+        passenger_trip.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    except Passenger_Trip.DoesNotExist:
+        return Response(
+            {'error': error_messages.RESERVATION_NOT_FOUND},
             status=status.HTTP_404_NOT_FOUND,
         )

@@ -42,3 +42,13 @@ univalle = [
     [Decimal('-76.529068'), Decimal('3.379543')],
     [Decimal('-76.537502'), Decimal('3.380173')],
 ]
+
+
+# Cálculo de la distancia entre dos puntos:
+# raiz( (x2-x1)^2 + (y2-y1)^2 )
+def distance(A, B):
+    x_distance = (Decimal(f'{B[0]}') - Decimal(f'{A[0]}')) ** 2
+    y_distance = (Decimal(f'{B[1]}') - Decimal(f'{A[1]}')) ** 2
+    suma = x_distance + y_distance
+    distance = Decimal(f'{(suma.sqrt())}')
+    return distance

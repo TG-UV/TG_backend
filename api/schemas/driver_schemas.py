@@ -279,3 +279,13 @@ get_trip_schema = {
         ),
     ],
 }
+
+delete_passenger_trip_schema = {
+    'description': 'Vista para descartar una reserva hecha por un pasajero (requiere token).',
+    'responses': {
+        204: inline_serializer(
+            name="Passenger_TripDeleted",
+            fields={},
+        ),
+    },
+}
