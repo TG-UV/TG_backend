@@ -38,31 +38,43 @@ router.register('vehicle', VehicleViewSet, 'vehicle')
 router.register('trip', TripViewSet, 'trip')
 router.register('passenger-trip', Passenger_TripViewSet, 'passenger-trip')
 
+
+driver_urls = [
+    path('trip/history/', driver.trip_history, name='trip_history_driver'),
+    path('trip/planned/', driver.planned_trips, name='planned_trips_driver'),
+    path('trip/current/', driver.current_trip, name='current_trip'),
+    path('trip/add/', driver.add_trip, name='add_trip'),
+    path('trip/delete/<int:id_trip>/', driver.delete_trip, name='delete_trip'),
+    path('trip/<int:id_trip>/', driver.get_trip, name='get_trip_driver'),
+    path('passenger-trip/confirm/<int:id_passenger_trip>/', driver.confirm_passenger_trip, name='confirm_passenger_trip'),
+    path('passenger-trip/delete/<int:id_passenger_trip>/', driver.delete_passenger_trip, name='delete_passenger_trip'),
+    path('vehicle/', driver.my_vehicles, name='my_vehicles'),
+    path('vehicle/add/', driver.add_vehicle, name='add_vehicle'),
+    path('vehicle/delete/<int:id_vehicle>/', driver.delete_vehicle, name='delete_vehicle'),
+    path('vehicle/update/<int:id_vehicle>/', driver.update_vehicle, name='update_vehicle'),
+    path('vehicle/<int:id_vehicle>/', driver.get_vehicle, name='get_vehicle'),
+    path('home/', general.home, name='home_driver'),
+]
+
+
+passenger_urls = [
+    path('trip/history/', passenger.trip_history, name='trip_history_passenger'),
+    path('trip/planned/', passenger.planned_trips, name='planned_trips_passenger'),
+    path('trip/book/', passenger.book_trip, name='book_trip'),
+    path('trip/delete/<int:id_trip>/', passenger.delete_trip_reservation, name='delete_trip_reservation'),
+    path('trip/associated/<int:id_trip>/', passenger.get_trip_associated, name='get_associated_trip_passenger'),
+    path('trip/<int:id_trip>/', passenger.get_trip, name='get_trip_passenger'),
+    path('search/', passenger.search_route, name='search_route_passenger'),
+    path('home/', general.home, name='home_passenger'),
+]
+
+
 urlpatterns = [
     path('user-management/list/', admin.list_users, name='list_users'),
     path('users/registration/', registration.registration, name='registration'),
     path('users/profile/', general.get_profile, name='profile'),
     path('vehicle/registration/', registration.vehicle_registration, name='vehicles_registration'),
-    path('driver/trip/history/', driver.trip_history, name='trip_history_driver'),
-    path('driver/trip/planned/', driver.planned_trips, name='planned_trips_driver'),
-    path('driver/trip/current/', driver.current_trip, name='current_trip'),
-    path('driver/trip/add/', driver.add_trip, name='add_trip'),
-    path('driver/trip/delete/<int:id_trip>/', driver.delete_trip, name='delete_trip'),
-    path('driver/trip/<int:id_trip>/', driver.get_trip, name='get_trip_driver'),
-    path('driver/passenger-trip/delete/<int:id_passenger_trip>/', driver.delete_passenger_trip, name='delete_passenger_trip'),
-    path('driver/vehicle/', driver.my_vehicles, name='my_vehicles'),
-    path('driver/vehicle/add/', driver.add_vehicle, name='add_vehicle'),
-    path('driver/vehicle/delete/<int:id_vehicle>/', driver.delete_vehicle, name='delete_vehicle'),
-    path('driver/vehicle/update/<int:id_vehicle>/', driver.update_vehicle, name='update_vehicle'),
-    path('driver/vehicle/<int:id_vehicle>/', driver.get_vehicle, name='get_vehicle'),
-    path('driver/home/', general.home, name='home_driver'),
-    path('passenger/trip/history/', passenger.trip_history, name='trip_history_passenger'),
-    path('passenger/trip/planned/', passenger.planned_trips, name='planned_trips_passenger'),
-    path('passenger/trip/book/', passenger.book_trip, name='book_trip'),
-    path('passenger/trip/delete/<int:id_trip>/', passenger.delete_trip_reservation, name='delete_trip_reservation'),
-    path('passenger/trip/associated/<int:id_trip>/', passenger.get_trip_associated, name='get_associated_trip_passenger'),
-    path('passenger/trip/<int:id_trip>/', passenger.get_trip, name='get_trip_passenger'),
-    path('passenger/search/', passenger.search_route, name='search_route_passenger'),
-    path('passenger/home/', general.home, name='home_passenger'),
+    path('driver/', include(driver_urls)),
+    path('passenger/', include(passenger_urls)),
     path('', include(router.urls)),
 ]

@@ -346,20 +346,62 @@ def delete_trip(request, id_trip):
         )
 
 
+# Confirmar reserva hecha por un pasajero
+# @extend_schema(**driver_schemas.delete_passenger_trip_schema)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsDriver])
+def confirm_passenger_trip(request, id_passenger_trip):
+    user = request.user
+    error = {}
+    try:
+        passenger_trip = (
+            Passenger_Trip.objects.select_related('trip')
+            .only('seats', 'is_confirmed', 'trip__seats')
+            .get(id_passenger_trip=id_passenger_trip, trip__driver=user.id_user)
+        )
+
+        if passenger_trip.is_confirmed:
+            error['error'] = error_messages.RESERVATION_ALREADY_CONFIRMED
+
+        else:
+            if passenger_trip.trip.seats >= passenger_trip.seats:
+                trip_query = Trip.objects.filter(id_trip=passenger_trip.trip.id_trip)
+                trip_query.update(seats=F('seats') - passenger_trip.seats)
+
+                passenger_trip_query = Passenger_Trip.objects.filter(
+                    id_passenger_trip=id_passenger_trip
+                )
+                passenger_trip_query.update(is_confirmed=True)
+
+                return Response(status=status.HTTP_200_OK)
+
+            else:
+                error['error'] = error_messages.NOT_ENOUGH_SEATS
+
+        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+    except Passenger_Trip.DoesNotExist:
+        return Response(
+            {'error': error_messages.RESERVATION_NOT_FOUND},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
 # Descartar reserva hecha por un pasajero
 @extend_schema(**driver_schemas.delete_passenger_trip_schema)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsDriver])
 def delete_passenger_trip(request, id_passenger_trip):
+    user = request.user
     try:
         passenger_trip = Passenger_Trip.objects.only(
             'seats', 'is_confirmed', 'trip_id'
-        ).get(id_passenger_trip=id_passenger_trip)
+        ).get(id_passenger_trip=id_passenger_trip, trip__driver=user.id_user)
 
         # Si la reserva ya estaba confirmada se restablecen los puestos separados.
         if passenger_trip.is_confirmed:
-            trip = Trip.objects.filter(id_trip=passenger_trip.trip_id)
-            trip.update(seats=F('seats') + passenger_trip.seats)
+            trip_query = Trip.objects.filter(id_trip=passenger_trip.trip_id)
+            trip_query.update(seats=F('seats') + passenger_trip.seats)
 
         passenger_trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
