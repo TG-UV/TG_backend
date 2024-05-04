@@ -62,5 +62,5 @@ sqlparse==0.4.4
 typing_extensions==4.9.0
 tzdata==2023.3
 uritemplate==4.1.1
-urllib3==2.1.0
+urllib3==1.26.16
 whitenoise==6.6.0
