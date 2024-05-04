@@ -440,10 +440,13 @@ def get_route(starting_point, arrival_point):
     data = response.json()
 
     routes = data.get('routes', None)
+    route = []
 
     if routes:
         # Si se encontraron rutas, devolver la primera ruta.
         route = routes[0]['geometry']['coordinates']
-        return route
     else:
-        return []
+        # Si no se encontraron rutas, devolver una ruta por defecto.
+        route = [starting_point, arrival_point]
+    
+    return route
