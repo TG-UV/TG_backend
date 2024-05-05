@@ -190,10 +190,9 @@ if ACTIVATE_EMAIL:
     DOMAIN = os.environ.get('EMAIL_LINKS_DOMAIN')
     DJOSER['SEND_ACTIVATION_EMAIL'] = True
     DJOSER['SEND_CONFIRMATION_EMAIL'] = True
-    DJOSER['USERNAME_CHANGED_EMAIL_CONFIRMATION'] = True
+    DJOSER['PASSWORD_CHANGED_EMAIL_CONFIRMATION'] = True
     DJOSER['ACTIVATION_URL'] = 'rayo-activate/{uid}/{token}'
     DJOSER['PASSWORD_RESET_CONFIRM_URL'] = 'rayo-password-reset/{uid}/{token}'
-    DJOSER['USERNAME_RESET_CONFIRM_URL'] = 'rayo-email-reset/{uid}/{token}'
     DJOSER['TOKEN_MODEL'] = 'rest_framework.authtoken.models.Token'
 
     # email
