@@ -292,7 +292,6 @@ def search_route(request):
     if trip.is_valid():
         current_datetime = timezone.now()
 
-        # Si no se proporciona fecha, hora o puestos, se asignan valores por defecto.
         start_time = trip_data.get('start_time', current_datetime.time())
         start_date = trip_data.get('start_date', current_datetime.date())
         seats = trip_data.get('seats', 1)
@@ -443,10 +442,8 @@ def get_route(starting_point, arrival_point):
     route = []
 
     if routes:
-        # Si se encontraron rutas, devolver la primera ruta.
         route = routes[0]['geometry']['coordinates']
     else:
-        # Si no se encontraron rutas, devolver una ruta por defecto.
         route = [starting_point, arrival_point]
     
     return route

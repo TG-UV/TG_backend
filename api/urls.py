@@ -38,6 +38,10 @@ router.register('vehicle', VehicleViewSet, 'vehicle')
 router.register('trip', TripViewSet, 'trip')
 router.register('passenger-trip', Passenger_TripViewSet, 'passenger-trip')
 
+auth_urls = [ 
+    path('token/login/', general.CustomLogin.as_view(), name='custom_login'),
+    path('token/logout/', general.CustomLogout.as_view(), name='custom_logout')
+]
 
 driver_urls = [
     path('trip/history/', driver.trip_history, name='trip_history_driver'),
@@ -56,7 +60,6 @@ driver_urls = [
     path('home/', general.home, name='home_driver'),
 ]
 
-
 passenger_urls = [
     path('trip/history/', passenger.trip_history, name='trip_history_passenger'),
     path('trip/planned/', passenger.planned_trips, name='planned_trips_passenger'),
@@ -68,13 +71,17 @@ passenger_urls = [
     path('home/', general.home, name='home_passenger'),
 ]
 
+users_urls = [
+    path('registration/', registration.registration, name='registration'),
+    path('profile/', general.get_profile, name='profile'),
+]
 
 urlpatterns = [
-    path('user-management/list/', admin.list_users, name='list_users'),
-    path('users/registration/', registration.registration, name='registration'),
-    path('users/profile/', general.get_profile, name='profile'),
-    path('vehicle/registration/', registration.vehicle_registration, name='vehicles_registration'),
+    path('auth/', include(auth_urls)),
     path('driver/', include(driver_urls)),
     path('passenger/', include(passenger_urls)),
+    path('user-management/list/', admin.list_users, name='list_users'),
+    path('users/', include(users_urls)),
+    path('vehicle/registration/', registration.vehicle_registration, name='vehicles_registration'),
     path('', include(router.urls)),
 ]

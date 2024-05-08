@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'drf_spectacular',
     # Project's Apps
     'api',
-    'notification',
 ]
 
 MIDDLEWARE = [

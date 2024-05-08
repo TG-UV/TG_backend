@@ -1,12 +1,15 @@
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, action, permission_classes
-from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
+from django.db import IntegrityError
+from drf_spectacular.utils import extend_schema
 from api.serializers.user import ViewUserSerializer
+from api.serializers.device import DeviceSerializer
 from api.models import User
 from api.schemas import general_schemas
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet, TokenCreateView, TokenDestroyView
 
 
 # Todos los usuarios
@@ -26,6 +29,48 @@ class CustomUserViewSet(UserViewSet):
     @action([], detail=False, url_path=f"reset_{User.USERNAME_FIELD}_confirm")
     def reset_username_confirm(self, request, *args, **kwargs):
         return
+
+
+# Iniciar sesión
+class CustomLogin(TokenCreateView):
+
+    id_device = None
+
+    def post(self, request, **kwargs):
+        self.id_device = request.data.get('id_device', None)
+
+        return super().post(request, **kwargs)
+
+    def _action(self, serializer):
+        login_response = super()._action(serializer)
+        auth_token = login_response.data.get('auth_token', None)
+
+        if auth_token and self.id_device:
+            self.add_device(auth_token)
+
+        return login_response
+
+    def add_device(self, auth_token):
+        try:
+            token = Token.objects.only('user_id').get(key=auth_token)
+            device_data = {'id_device': self.id_device, 'user': token.user_id}
+
+            device = DeviceSerializer(data=device_data)
+
+            if device.is_valid():
+                device.save()
+
+        except Token.DoesNotExist:
+            return
+
+        except IntegrityError:
+            return
+
+
+# Cerrar sesión
+class CustomLogout(TokenDestroyView):
+    def post(self, request):
+        return super().post(request)
 
 
 # Ver perfil
