@@ -120,10 +120,10 @@ class ViewUserSerializer(CustomUserSerializer):
     type = serializers.SerializerMethodField()
 
     def get_residence_city(self, obj):
-        return obj.residence_city.name if obj.residence_city else None
+        return obj.residence_city.name
 
     def get_type(self, obj):
-        return obj.type.name if obj.type else None
+        return obj.type.name
 
 
 class ViewUserReduceSerializer(serializers.ModelSerializer):

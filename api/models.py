@@ -204,3 +204,12 @@ class Passenger_Trip(models.Model):
 
     def __str__(self):
         return f"Id: {self.id_passenger_trip} Pasajero {self.passenger} en el viaje {self.trip}"
+
+
+class Device(models.Model):
+    id_device = models.CharField(primary_key=True, max_length=50)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Dispositivo: {self.id_device} Usuario {self.user}"
