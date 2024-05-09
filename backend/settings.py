@@ -173,6 +173,8 @@ SPECTACULAR_SETTINGS = {
 
 MAPBOX_KEY = os.environ.get('MAPBOX_KEY')
 
+FIREBASE_JSON = os.environ.get('FIREBASE_JSON')
+
 PRODUCTION = 'PRODUCTION' in os.environ
 
 if PRODUCTION:

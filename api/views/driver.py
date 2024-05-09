@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import F, DateTimeField, ExpressionWrapper
 from datetime import timedelta
 from django.utils import timezone
@@ -365,13 +365,23 @@ def confirm_passenger_trip(request, id_passenger_trip):
 
         else:
             if passenger_trip.trip.seats >= passenger_trip.seats:
-                trip_query = Trip.objects.filter(id_trip=passenger_trip.trip.id_trip)
-                trip_query.update(seats=F('seats') - passenger_trip.seats)
+                with transaction.atomic():
+                    trip_query = (
+                        Trip.objects.select_for_update()
+                        .only('seats')
+                        .get(id_trip=passenger_trip.trip.id_trip)
+                    )
+                    passenger_trip_query = (
+                        Passenger_Trip.objects.select_for_update()
+                        .only('is_confirmed')
+                        .get(id_passenger_trip=id_passenger_trip)
+                    )
 
-                passenger_trip_query = Passenger_Trip.objects.filter(
-                    id_passenger_trip=id_passenger_trip
-                )
-                passenger_trip_query.update(is_confirmed=True)
+                    trip_query.seats -= passenger_trip.seats
+                    trip_query.save(update_fields=['seats'])
+
+                    passenger_trip_query.is_confirmed = True
+                    passenger_trip_query.save(update_fields=['is_confirmed'])
 
                 return Response(status=status.HTTP_200_OK)
 
