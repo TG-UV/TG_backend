@@ -10,6 +10,7 @@ from api.serializers.device import DeviceSerializer
 from api.models import User
 from api.schemas import general_schemas
 from djoser.views import UserViewSet, TokenCreateView, TokenDestroyView
+from .notification import send_welcome
 
 
 # Todos los usuarios
@@ -34,7 +35,8 @@ class CustomUserViewSet(UserViewSet):
 # Iniciar sesión
 class CustomLogin(TokenCreateView):
 
-    id_device = None
+    def __init__(self):
+        self.id_device = None
 
     def post(self, request, **kwargs):
         self.id_device = request.data.get('id_device', None)
@@ -59,6 +61,8 @@ class CustomLogin(TokenCreateView):
 
             if device.is_valid():
                 device.save()
+
+            send_welcome(self.id_device)
 
         except Token.DoesNotExist:
             return
