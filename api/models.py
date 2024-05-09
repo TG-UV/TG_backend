@@ -207,7 +207,7 @@ class Passenger_Trip(models.Model):
 
 
 class Device(models.Model):
-    id_device = models.CharField(primary_key=True, max_length=50)
+    id_device = models.TextField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
 
