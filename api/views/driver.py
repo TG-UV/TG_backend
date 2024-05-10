@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError, transaction
-from django.db.models import F, DateTimeField, ExpressionWrapper
+from django.db.models import F
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework.response import Response
@@ -56,23 +56,7 @@ def add_vehicle(request):
 def get_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = (
-            Vehicle.objects.select_related(
-                'vehicle_type',
-                'vehicle_brand',
-                'vehicle_model',
-                'vehicle_color',
-            )
-            .only(
-                'id_vehicle',
-                'vehicle_type',
-                'vehicle_brand',
-                'vehicle_model',
-                'vehicle_color',
-                'license_plate',
-            )
-            .get(id_vehicle=id_vehicle, owner=user.id_user)
-        )
+        vehicle = Vehicle.objects.get_vehicle_for(id_vehicle, user.id_user)
         serializer = ViewVehicleSerializer(vehicle)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -84,29 +68,12 @@ def get_vehicle(request, id_vehicle):
 
 
 # Obtener todos los vehículos
-@extend_schema(**driver_schemas.my_vehicles_schema)
+@extend_schema(**driver_schemas.get_my_vehicles_schema)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def my_vehicles(request):
+def get_my_vehicles(request):
     user = request.user
-    vehicles = (
-        Vehicle.objects.filter(owner=user.id_user)
-        .select_related(
-            'vehicle_type',
-            'vehicle_brand',
-            'vehicle_model',
-            'vehicle_color',
-        )
-        .only(
-            'id_vehicle',
-            'vehicle_type',
-            'vehicle_brand',
-            'vehicle_model',
-            'vehicle_color',
-            'license_plate',
-        )
-        .order_by('license_plate')
-    )
+    vehicles = Vehicle.objects.get_my_vehicles(user.id_user)
     serializer = ViewVehicleSerializer(vehicles, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -156,7 +123,7 @@ def update_vehicle(request, id_vehicle):
 def delete_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = Vehicle.objects.get(id_vehicle=id_vehicle, owner=user.id_user)
+        vehicle = Vehicle.objects.get_vehicle_for_delete(id_vehicle, user.id_user)
         vehicle.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -225,30 +192,10 @@ def get_trip(request, id_trip):
 # Obtener historial de viajes
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def trip_history(request):
+def get_trip_history(request):
     user = request.user
     current_datetime = timezone.now()
-
-    queryset = Trip.objects.only(
-        'id_trip',
-        'start_date',
-        'start_time',
-        'starting_point_lat',
-        'starting_point_long',
-        'arrival_point_lat',
-        'arrival_point_long',
-    ).annotate(
-        start_datetime=ExpressionWrapper(
-            F('start_date') + F('start_time'), output_field=DateTimeField()
-        )
-    )
-
-    queryset = queryset.filter(
-        start_datetime__lt=current_datetime, driver=user.id_user
-    ).order_by(
-        '-start_datetime'
-    )  # lt significa less than.
-
+    queryset = Trip.objects.get_trip_history_for(current_datetime, user.id_user)
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
@@ -259,32 +206,10 @@ def trip_history(request):
 # Obtener viajes planeados
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def planned_trips(request):
+def get_planned_trips(request):
     user = request.user
     current_datetime = timezone.now()
-
-    queryset = Trip.objects.only(
-        'id_trip',
-        'start_date',
-        'start_time',
-        'starting_point_lat',
-        'starting_point_long',
-        'arrival_point_lat',
-        'arrival_point_long',
-        'seats',
-        'fare',
-    ).annotate(
-        start_datetime=ExpressionWrapper(
-            F('start_date') + F('start_time'), output_field=DateTimeField()
-        )
-    )
-
-    queryset = queryset.filter(
-        start_datetime__gt=current_datetime, driver=user.id_user
-    ).order_by(
-        'start_datetime'
-    )  # gt significa greater than.
-
+    queryset = Trip.objects.get_planned_trips_for(current_datetime, user.id_user)
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
@@ -295,35 +220,13 @@ def planned_trips(request):
 # Obtener viaje actual
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def current_trip(request):
+def get_current_trip(request):
     user = request.user
     current_datetime = timezone.now()
-    two_hours_ago = timezone.now() - timedelta(hours=2)
-
-    queryset = Trip.objects.only(
-        'id_trip',
-        'start_date',
-        'start_time',
-        'starting_point_lat',
-        'starting_point_long',
-        'arrival_point_lat',
-        'arrival_point_long',
-    ).annotate(
-        start_datetime=ExpressionWrapper(
-            F('start_date') + F('start_time'), output_field=DateTimeField()
-        )
+    two_hours_ago_datetime = timezone.now() - timedelta(hours=2)
+    queryset = Trip.objects.get_current_trip_for(
+        current_datetime, two_hours_ago_datetime, user.id_user
     )
-
-    queryset = (
-        queryset.filter(
-            start_datetime__lte=current_datetime,
-            start_datetime__gt=two_hours_ago,
-            driver=user.id_user,
-        )
-        .order_by('-start_datetime')
-        .first()
-    )  # lte significa less than equal.
-
     serializer = ViewTripReduceSerializer(queryset)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -335,7 +238,7 @@ def current_trip(request):
 def delete_trip(request, id_trip):
     user = request.user
     try:
-        trip = Trip.objects.only('id_trip').get(id_trip=id_trip, driver=user.id_user)
+        trip = Trip.objects.get_trip_for_delete(id_trip, user.id_user)
         trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

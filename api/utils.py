@@ -1,6 +1,15 @@
 from decimal import Decimal
 
 
+univalle = [
+    [Decimal('-76.537502'), Decimal('3.380173')],
+    [Decimal('-76.537022'), Decimal('3.371275')],
+    [Decimal('-76.529775'), Decimal('3.367670')],
+    [Decimal('-76.529068'), Decimal('3.379543')],
+    [Decimal('-76.537502'), Decimal('3.380173')],
+]
+
+
 # Algoritmo Ray casting
 def ray_casting_algorithm(point, polygon):
     x, y = point
@@ -35,20 +44,11 @@ def point_inside_polygon(point, polygon):
     return ray_casting_algorithm(point, polygon)
 
 
-univalle = [
-    [Decimal('-76.537502'), Decimal('3.380173')],
-    [Decimal('-76.537022'), Decimal('3.371275')],
-    [Decimal('-76.529775'), Decimal('3.367670')],
-    [Decimal('-76.529068'), Decimal('3.379543')],
-    [Decimal('-76.537502'), Decimal('3.380173')],
-]
-
-
 # Cálculo de la distancia entre dos puntos:
 # raiz( (x2-x1)^2 + (y2-y1)^2 )
 def distance(A, B):
     x_distance = (Decimal(f'{B[0]}') - Decimal(f'{A[0]}')) ** 2
     y_distance = (Decimal(f'{B[1]}') - Decimal(f'{A[1]}')) ** 2
     suma = x_distance + y_distance
-    distance = Decimal(f'{(suma.sqrt())}')
+    distance = suma.sqrt()
     return distance
