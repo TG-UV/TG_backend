@@ -73,7 +73,7 @@ get_vehicle_schema = {
     ],
 }
 
-my_vehicles_schema = {
+get_my_vehicles_schema = {
     'description': 'Vehículos registrados por un usuario (requiere token).',
     'responses': {
         200: view_vehicle_serializer,

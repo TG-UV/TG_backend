@@ -2,7 +2,6 @@ import string
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    BaseUserManager,
     PermissionsMixin,
 )
 from .custom_validators import (
@@ -16,32 +15,9 @@ from .custom_validators import (
     validate_longitude,
 )
 
-
-class UserManager(BaseUserManager):
-    def get_by_natural_key(self, username):
-        case_insensitive_username_field = '{}__iexact'.format(self.model.USERNAME_FIELD)
-        return self.get(**{case_insensitive_username_field: username})
-
-    def create_user(self, email, password, **kwargs):
-        if not email:
-            raise ValueError('Se requiere un email')
-
-        if not password:
-            raise ValueError('Se requiere una contraseña')
-
-        user = self.model(email=email, **kwargs)
-        user.set_password(password)
-        user.save()
-
-        return user
-
-    def create_superuser(self, email, password, **kwargs):
-        user = self.create_user(email, password, **kwargs)
-        user.is_staff = True
-        user.is_superuser = True
-        user.save()
-
-        return user
+from .custom_managers.trip import TripManager
+from .custom_managers.user import UserManager
+from .custom_managers.vehicle import VehicleManager
 
 
 class UserType(models.Model):
@@ -140,6 +116,8 @@ class Vehicle(models.Model):
     license_plate = models.CharField(max_length=10)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    objects = VehicleManager()
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -178,8 +156,11 @@ class Trip(models.Model):
     fare = models.IntegerField(validators=[validate_fare])
     current_trip = models.BooleanField(default=False)
 
+    objects = TripManager()
+
     def __str__(self):
         return f"Trip #{self.id_trip}"
+
 
 
 class Passenger_Trip(models.Model):

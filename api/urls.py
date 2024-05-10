@@ -44,15 +44,15 @@ auth_urls = [
 ]
 
 driver_urls = [
-    path('trip/history/', driver.trip_history, name='trip_history_driver'),
-    path('trip/planned/', driver.planned_trips, name='planned_trips_driver'),
-    path('trip/current/', driver.current_trip, name='current_trip'),
+    path('trip/history/', driver.get_trip_history, name='trip_history_driver'),
+    path('trip/planned/', driver.get_planned_trips, name='planned_trips_driver'),
+    path('trip/current/', driver.get_current_trip, name='current_trip'),
     path('trip/add/', driver.add_trip, name='add_trip'),
     path('trip/delete/<int:id_trip>/', driver.delete_trip, name='delete_trip'),
     path('trip/<int:id_trip>/', driver.get_trip, name='get_trip_driver'),
     path('passenger-trip/confirm/<int:id_passenger_trip>/', driver.confirm_passenger_trip, name='confirm_passenger_trip'),
     path('passenger-trip/delete/<int:id_passenger_trip>/', driver.delete_passenger_trip, name='delete_passenger_trip'),
-    path('vehicle/', driver.my_vehicles, name='my_vehicles'),
+    path('vehicle/', driver.get_my_vehicles, name='my_vehicles'),
     path('vehicle/add/', driver.add_vehicle, name='add_vehicle'),
     path('vehicle/delete/<int:id_vehicle>/', driver.delete_vehicle, name='delete_vehicle'),
     path('vehicle/update/<int:id_vehicle>/', driver.update_vehicle, name='update_vehicle'),
