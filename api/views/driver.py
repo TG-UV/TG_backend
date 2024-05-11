@@ -149,8 +149,13 @@ def add_trip(request):
     trip = TripSerializer(data=trip_data)
 
     if trip.is_valid():
-        trip.save()
-        return Response(trip.data, status=status.HTTP_201_CREATED)
+        try:
+            trip.save()
+            return Response(trip.data, status=status.HTTP_201_CREATED)
+
+        except IntegrityError:
+            content = {'error': error_messages.TRIP_ALREADY_EXISTS}
+            return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     else:
         return Response(trip.errors, status=status.HTTP_400_BAD_REQUEST)
