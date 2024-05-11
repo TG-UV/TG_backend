@@ -122,8 +122,8 @@ class Vehicle(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['license_plate', 'owner'], name='License_plate_Owner_Unique'
-            )  # Valida que un usuario no añada un mismo vehículo varias veces.
+                fields=['license_plate', 'owner'], name='license_plate_owner_unique'
+            )  # Valida que un conductor no añada un mismo vehículo varias veces.
         ]
 
     def save(self, *args, **kwargs):
@@ -159,6 +159,13 @@ class Trip(models.Model):
 
     objects = TripManager()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['start_date', 'start_time', 'driver'], name='start_datetime_driver_unique'
+            )  # Valida que un conductor no cree varios viajes con la misma fecha y hora.
+        ]
+
     def __str__(self):
         return f"Trip #{self.id_trip}"
 
@@ -182,7 +189,7 @@ class Passenger_Trip(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['passenger', 'trip'], name='Passenger_Trip_Unique'
+                fields=['passenger', 'trip'], name='passenger_trip_unique'
             )  # Valida que un pasajero solo aparezca una vez en un viaje.
         ]
 
