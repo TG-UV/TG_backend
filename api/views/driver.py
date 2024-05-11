@@ -56,7 +56,7 @@ def add_vehicle(request):
 def get_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = Vehicle.objects.get_vehicle_for(id_vehicle, user.id_user)
+        vehicle = Vehicle.objects.get_vehicle(id_vehicle, user.id_user)
         serializer = ViewVehicleSerializer(vehicle)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -123,7 +123,9 @@ def update_vehicle(request, id_vehicle):
 def delete_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = Vehicle.objects.get_vehicle_for_delete(id_vehicle, user.id_user)
+        vehicle = Vehicle.objects.only('id_vehicle').get(
+            id_vehicle=id_vehicle, owner=user.id_user
+        )
         vehicle.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -163,22 +165,7 @@ def get_trip(request, id_trip):
     trip = Trip.objects.filter(id_trip=id_trip, driver=user.id_user).exists()
 
     if trip:
-        queryset = (
-            Passenger_Trip.objects.filter(trip=id_trip)
-            .select_related(
-                'passenger',
-            )
-            .only(
-                'passenger',
-                'pickup_point_lat',
-                'pickup_point_long',
-                'seats',
-                'is_confirmed',
-                'passenger__phone_number',
-                'passenger__first_name',
-                'passenger__last_name',
-            )
-        )
+        queryset = Passenger_Trip.objects.get_passengers(id_trip)
         serializer = ViewPassenger_TripSerializer(queryset, many=True)
         content = {'id_trip': id_trip, 'passengers': serializer.data}
         return Response(content, status=status.HTTP_200_OK)
@@ -195,7 +182,7 @@ def get_trip(request, id_trip):
 def get_trip_history(request):
     user = request.user
     current_datetime = timezone.now()
-    queryset = Trip.objects.get_trip_history_for(current_datetime, user.id_user)
+    queryset = Trip.objects.get_trip_history(current_datetime, user.id_user)
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
@@ -209,7 +196,7 @@ def get_trip_history(request):
 def get_planned_trips(request):
     user = request.user
     current_datetime = timezone.now()
-    queryset = Trip.objects.get_planned_trips_for(current_datetime, user.id_user)
+    queryset = Trip.objects.get_planned_trips(current_datetime, user.id_user)
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
@@ -224,7 +211,7 @@ def get_current_trip(request):
     user = request.user
     current_datetime = timezone.now()
     two_hours_ago_datetime = timezone.now() - timedelta(hours=2)
-    queryset = Trip.objects.get_current_trip_for(
+    queryset = Trip.objects.get_current_trip(
         current_datetime, two_hours_ago_datetime, user.id_user
     )
     serializer = ViewTripReduceSerializer(queryset)
@@ -238,7 +225,7 @@ def get_current_trip(request):
 def delete_trip(request, id_trip):
     user = request.user
     try:
-        trip = Trip.objects.get_trip_for_delete(id_trip, user.id_user)
+        trip = Trip.objects.only('id_trip').get(id_trip=id_trip, driver=user.id_user)
         trip.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -255,43 +242,44 @@ def delete_trip(request, id_trip):
 @permission_classes([IsAuthenticated, IsDriver])
 def confirm_passenger_trip(request, id_passenger_trip):
     user = request.user
-    error = {}
     try:
-        passenger_trip = (
-            Passenger_Trip.objects.select_related('trip')
-            .only('seats', 'is_confirmed', 'trip__seats')
-            .get(id_passenger_trip=id_passenger_trip, trip__driver=user.id_user)
+        passenger_trip_query = Passenger_Trip.objects.get_basic_reservation_info(
+            id_passenger_trip, user.id_user
         )
 
-        if passenger_trip.is_confirmed:
-            error['error'] = error_messages.RESERVATION_ALREADY_CONFIRMED
+        if passenger_trip_query.is_confirmed:
+            return Response(
+                {'error': error_messages.RESERVATION_ALREADY_CONFIRMED},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if passenger_trip_query.trip.seats >= passenger_trip_query.seats:
+            with transaction.atomic():
+                trip = (
+                    Trip.objects.select_for_update()
+                    .only('seats')
+                    .get(id_trip=passenger_trip_query.trip_id)
+                )
+
+                passenger_trip = (
+                    Passenger_Trip.objects.select_for_update()
+                    .only('is_confirmed')
+                    .get(id_passenger_trip=id_passenger_trip)
+                )
+
+                trip.seats -= passenger_trip_query.seats
+                trip.save(update_fields=['seats'])
+
+                passenger_trip.is_confirmed = True
+                passenger_trip.save(update_fields=['is_confirmed'])
+
+            return Response(status=status.HTTP_200_OK)
 
         else:
-            if passenger_trip.trip.seats >= passenger_trip.seats:
-                with transaction.atomic():
-                    trip_query = (
-                        Trip.objects.select_for_update()
-                        .only('seats')
-                        .get(id_trip=passenger_trip.trip.id_trip)
-                    )
-                    passenger_trip_query = (
-                        Passenger_Trip.objects.select_for_update()
-                        .only('is_confirmed')
-                        .get(id_passenger_trip=id_passenger_trip)
-                    )
-
-                    trip_query.seats -= passenger_trip.seats
-                    trip_query.save(update_fields=['seats'])
-
-                    passenger_trip_query.is_confirmed = True
-                    passenger_trip_query.save(update_fields=['is_confirmed'])
-
-                return Response(status=status.HTTP_200_OK)
-
-            else:
-                error['error'] = error_messages.NOT_ENOUGH_SEATS
-
-        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': error_messages.NOT_ENOUGH_SEATS},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     except Passenger_Trip.DoesNotExist:
         return Response(
@@ -307,16 +295,23 @@ def confirm_passenger_trip(request, id_passenger_trip):
 def delete_passenger_trip(request, id_passenger_trip):
     user = request.user
     try:
-        passenger_trip = Passenger_Trip.objects.only(
-            'seats', 'is_confirmed', 'trip_id'
-        ).get(id_passenger_trip=id_passenger_trip, trip__driver=user.id_user)
+        passenger_trip = Passenger_Trip.objects.get_data_to_delete_reservation(
+            id_passenger_trip, user.id_user
+        )
 
-        # Si la reserva ya estaba confirmada se restablecen los puestos separados.
-        if passenger_trip.is_confirmed:
-            trip_query = Trip.objects.filter(id_trip=passenger_trip.trip_id)
-            trip_query.update(seats=F('seats') + passenger_trip.seats)
+        with transaction.atomic():
+            # Si la reserva ya estaba confirmada se restablecen los puestos separados.
+            if passenger_trip.is_confirmed:
+                trip = (
+                    Trip.objects.select_for_update()
+                    .only('seats')
+                    .get(id_trip=passenger_trip.trip_id)
+                )
+                trip.seats += passenger_trip.seats
+                trip.save(update_fields=['seats'])
 
-        passenger_trip.delete()
+            passenger_trip.delete()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     except Passenger_Trip.DoesNotExist:

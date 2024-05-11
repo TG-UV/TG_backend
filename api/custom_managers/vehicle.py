@@ -4,7 +4,6 @@ from django.db import models
 class VehicleManager(models.Manager):
     def base_query(self):
         queryset = self.get_queryset()
-
         return queryset.select_related(
             'vehicle_type',
             'vehicle_brand',
@@ -19,11 +18,8 @@ class VehicleManager(models.Manager):
             'license_plate',
         )
 
-    def get_vehicle_for(self, id_vehicle, owner):
+    def get_vehicle(self, id_vehicle, owner):
         return self.base_query().get(id_vehicle=id_vehicle, owner=owner)
 
     def get_my_vehicles(self, owner):
         return self.base_query().filter(owner=owner).order_by('license_plate')
-
-    def get_vehicle_for_delete(self, id_vehicle, owner):
-        return self.only('id_vehicle').get(id_vehicle=id_vehicle, owner=owner)

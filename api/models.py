@@ -15,6 +15,7 @@ from .custom_validators import (
     validate_longitude,
 )
 
+from .custom_managers.passenger_trip import Passenger_TripManager
 from .custom_managers.trip import TripManager
 from .custom_managers.user import UserManager
 from .custom_managers.vehicle import VehicleManager
@@ -175,6 +176,8 @@ class Passenger_Trip(models.Model):
     )
     seats = models.IntegerField(validators=[validate_seats])
     is_confirmed = models.BooleanField(default=False)
+
+    objects = Passenger_TripManager()
 
     class Meta:
         constraints = [
