@@ -3,14 +3,13 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from drf_spectacular.utils import extend_schema
 from api.serializers.user import ViewUserSerializer
 from api.serializers.device import DeviceSerializer
-from api.models import User
+from api.models import User, Device
 from api.schemas import general_schemas
 from djoser.views import UserViewSet, TokenCreateView, TokenDestroyView
-from .notification import send_welcome
 
 
 # Todos los usuarios
@@ -72,7 +71,10 @@ class CustomLogin(TokenCreateView):
 # Cerrar sesión
 class CustomLogout(TokenDestroyView):
     def post(self, request):
-        return super().post(request)
+        user = request.user
+        with transaction.atomic():
+            Device.objects.filter(user=user.id_user).delete()
+            return super().post(request)
 
 
 # Ver perfil
