@@ -9,6 +9,7 @@ from .serializers.vehicle_model import VehicleModelSerializer
 from .serializers.vehicle import VehicleSerializer
 from .serializers.trip import TripSerializer
 from .serializers.passenger_trip import Passenger_TripSerializer
+from .serializers.device import DeviceSerializer
 from .models import (
     UserType,
     City,
@@ -20,6 +21,7 @@ from .models import (
     Vehicle,
     Trip,
     Passenger_Trip,
+    Device,
 )
 
 
@@ -81,3 +83,9 @@ class Passenger_TripViewSet(viewsets.ModelViewSet):
     queryset = Passenger_Trip.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = Passenger_TripSerializer
+
+
+class DeviceViewSet(viewsets.ModelViewSet):
+    queryset = Device.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = DeviceSerializer
