@@ -34,6 +34,21 @@ def send_reservation_rejected(device_token):
     send_notification_to_device(device_token, notification, data)
 
 
+def send_trip_update(device_token, id_trip):
+    notification = {
+        'title': 'Novedad en tu viaje',
+        'body': 'Revisa las actualizaciones del viaje ',
+    }
+
+    data = {
+        'notification_type': 'travel_notification',
+        'additional_info': json.dumps({'id_trip': id_trip}),
+    }
+    print(device_token)
+
+    #send_notification_to_device(device_token, notification, data)
+
+
 def send_welcome(device_token):
     notification = {
         'title': 'Bienvenido',
@@ -42,21 +57,23 @@ def send_welcome(device_token):
 
     data = {
         'notification_type': 'current_travel',
-        'additional_info': json.dumps({
-            'id_trip': '1',
-            'start_date': '2024-05-08',
-            'start_time': '16:00:00',
-            'starting_point': {
-                'lat': '3.375462',
-                'long': '-76.533166',
-            },
-            'arrival_point': {
-                'lat': '3.375462',
-                'long': '-76.533166',
-            },
-            'seats': '4',
-            'fare': '4000',
-        }),
+        'additional_info': json.dumps(
+            {
+                'id_trip': '1',
+                'start_date': '2024-05-08',
+                'start_time': '16:00:00',
+                'starting_point': {
+                    'lat': '3.375462',
+                    'long': '-76.533166',
+                },
+                'arrival_point': {
+                    'lat': '3.375462',
+                    'long': '-76.533166',
+                },
+                'seats': '4',
+                'fare': '4000',
+            }
+        ),
     }
 
     print(data)

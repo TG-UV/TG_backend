@@ -1,3 +1,4 @@
+from functools import partial
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -14,14 +15,15 @@ from api.serializers.vehicle import (
 )
 from api.serializers.trip import (
     TripSerializer,
-    ViewTripReduceSerializer,
     planned_trips_serializer,
+    trip_reduce_serializer,
 )
 from api.serializers.passenger_trip import ViewPassenger_TripSerializer
-from api.models import Vehicle, Trip, Passenger_Trip
+from api.models import Vehicle, Trip, Passenger_Trip, Device
 from api.permissions import IsDriver
 from api import error_messages
 from api.schemas import driver_schemas
+from .notification import send_trip_update
 
 
 # Añadir vehículo
@@ -191,8 +193,8 @@ def get_trip_history(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    serializer = ViewTripReduceSerializer(paginated_results, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    content = [trip_reduce_serializer(item) for item in paginated_results]
+    return paginator.get_paginated_response(content)
 
 
 # Obtener viajes planeados
@@ -219,8 +221,8 @@ def get_current_trip(request):
     queryset = Trip.objects.get_current_trip(
         current_datetime, two_hours_ago_datetime, user.id_user
     )
-    serializer = ViewTripReduceSerializer(queryset)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    content = trip_reduce_serializer(queryset) if queryset else {}
+    return Response(content, status=status.HTTP_200_OK)
 
 
 # Eliminar viaje
@@ -277,6 +279,18 @@ def confirm_passenger_trip(request, id_passenger_trip):
 
                 passenger_trip.is_confirmed = True
                 passenger_trip.save(update_fields=['is_confirmed'])
+
+                devices = Device.objects.filter(
+                    user__passenger_trip__trip=passenger_trip_query.trip_id  # 19
+                ).values_list('id_device', flat=True)
+
+                device = Device.objects.filter(
+                    user__passenger_trip=id_passenger_trip  # 19
+                ).values_list('id_device', flat=True)
+
+                transaction.on_commit(
+                    partial(send_trip_update, device, passenger_trip_query.trip_id)
+                )
 
             return Response(status=status.HTTP_200_OK)
 
