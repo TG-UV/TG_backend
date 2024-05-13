@@ -62,8 +62,6 @@ class CustomLogin(TokenCreateView):
             if device.is_valid():
                 device.save()
 
-            send_welcome(self.id_device)
-
         except Token.DoesNotExist:
             return
 
@@ -83,22 +81,7 @@ class CustomLogout(TokenDestroyView):
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     user = request.user
-    user = (
-        User.objects.select_related('residence_city', 'type')
-        .only(
-            'id_user',
-            'email',
-            'identity_document',
-            'phone_number',
-            'first_name',
-            'last_name',
-            'date_of_birth',
-            'residence_city',
-            'type',
-            'is_active',
-        )
-        .get(id_user=user.id_user)
-    )
+    user = User.objects.get_user_profile(user.id_user)
     serializer = ViewUserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
