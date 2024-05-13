@@ -19,6 +19,7 @@ from .api import (
     VehicleViewSet,
     TripViewSet,
     Passenger_TripViewSet,
+    DeviceViewSet
 )
 
 if settings.PRODUCTION:
@@ -37,6 +38,7 @@ router.register('vehicleModel', VehicleModelViewSet, 'vehicle_model')
 router.register('vehicle', VehicleViewSet, 'vehicle')
 router.register('trip', TripViewSet, 'trip')
 router.register('passenger-trip', Passenger_TripViewSet, 'passenger-trip')
+router.register('device', DeviceViewSet, 'device')
 
 auth_urls = [ 
     path('token/login/', general.CustomLogin.as_view(), name='custom_login'),
