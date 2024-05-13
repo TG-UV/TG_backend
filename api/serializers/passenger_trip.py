@@ -2,7 +2,6 @@ from rest_framework import serializers
 from api.custom_validators import validate_passenger
 from api.models import Passenger_Trip
 from .user import ViewUserReduceSerializer
-from typing import Dict, Any
 
 
 class Passenger_TripSerializer(serializers.ModelSerializer):
@@ -53,21 +52,3 @@ class ViewPassenger_TripSerializer(ViewPassenger_TripReduceSerializer):
         read_only_fields = fields
 
     passenger = ViewUserReduceSerializer()
-
-
-def passenger_trip_passenger_serializer(
-    passenger_trip: Passenger_Trip,
-) -> Dict[str, Any]:
-    return {
-        'id_trip': passenger_trip.trip.id_trip,
-        'start_date': passenger_trip.trip.start_date,
-        'start_time': passenger_trip.trip.start_time,
-        'starting_point': {
-            'lat': passenger_trip.trip.starting_point_lat,
-            'long': passenger_trip.trip.starting_point_long,
-        },
-        'arrival_point': {
-            'lat': passenger_trip.trip.arrival_point_lat,
-            'long': passenger_trip.trip.arrival_point_long,
-        },
-    }

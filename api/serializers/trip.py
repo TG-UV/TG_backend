@@ -21,35 +21,7 @@ class TripSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ViewTripReduceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Trip
-        fields = (
-            'id_trip',
-            'start_date',
-            'start_time',
-            'starting_point',
-            'arrival_point',
-        )
-        read_only_fields = fields
-
-    starting_point = serializers.SerializerMethodField()
-    arrival_point = serializers.SerializerMethodField()
-
-    def get_starting_point(self, obj):
-        return {
-            'lat': obj.starting_point_lat,
-            'long': obj.starting_point_long,
-        }
-
-    def get_arrival_point(self, obj):
-        return {
-            'lat': obj.arrival_point_lat,
-            'long': obj.arrival_point_long,
-        }
-
-
-class ViewTripSerializer(ViewTripReduceSerializer):
+class ViewTripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = (
@@ -66,7 +38,21 @@ class ViewTripSerializer(ViewTripReduceSerializer):
         )
         read_only_fields = fields
 
+    starting_point = serializers.SerializerMethodField()
+    arrival_point = serializers.SerializerMethodField()
     driver = ViewUserReduceSerializer()
+
+    def get_starting_point(self, obj):
+        return {
+            'lat': obj.starting_point_lat,
+            'long': obj.starting_point_long,
+        }
+
+    def get_arrival_point(self, obj):
+        return {
+            'lat': obj.arrival_point_lat,
+            'long': obj.arrival_point_long,
+        }
 
 
 class ViewTripMinimalSerializer(serializers.ModelSerializer):
@@ -95,7 +81,7 @@ class TripSearchSerializer(serializers.ModelSerializer):
         )
 
 
-def planned_trips_serializer(trip: Trip) -> Dict[str, Any]:
+def trip_reduce_serializer(trip: Trip) -> Dict[str, Any]:
     return {
         'id_trip': trip.id_trip,
         'start_date': trip.start_date,
@@ -108,6 +94,12 @@ def planned_trips_serializer(trip: Trip) -> Dict[str, Any]:
             'lat': trip.arrival_point_lat,
             'long': trip.arrival_point_long,
         },
+    }
+
+
+def planned_trips_serializer(trip: Trip) -> Dict[str, Any]:
+    return {
+        **trip_reduce_serializer(trip),
         'seats': trip.seats,
         'fare': trip.fare,
     }

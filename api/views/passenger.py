@@ -16,11 +16,11 @@ from api.serializers.trip import (
     ViewTripMinimalSerializer,
     TripSearchSerializer,
     planned_trips_serializer,
+    trip_reduce_serializer,
 )
 from api.serializers.passenger_trip import (
     Passenger_TripSerializer,
     ViewPassenger_TripReduceSerializer,
-    passenger_trip_passenger_serializer,
 )
 from api.models import Vehicle, Trip, Passenger_Trip
 from api.permissions import IsPassenger
@@ -184,7 +184,7 @@ def trip_history(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    content = [passenger_trip_passenger_serializer(item) for item in paginated_results]
+    content = [trip_reduce_serializer(item.trip) for item in paginated_results]
     return paginator.get_paginated_response(content)
 
 
@@ -223,7 +223,7 @@ def planned_trips(request):
     paginator = PageNumberPagination()
     paginator.page_size = 10
     paginated_results = paginator.paginate_queryset(queryset, request)
-    content = [passenger_trip_passenger_serializer(item) for item in paginated_results]
+    content = [trip_reduce_serializer(item.trip) for item in paginated_results]
     return paginator.get_paginated_response(content)
 
 
@@ -445,5 +445,5 @@ def get_route(starting_point, arrival_point):
         route = routes[0]['geometry']['coordinates']
     else:
         route = [starting_point, arrival_point]
-    
+
     return route
