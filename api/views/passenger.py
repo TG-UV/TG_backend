@@ -1,3 +1,4 @@
+from functools import partial
 from decimal import Decimal, localcontext
 import requests
 from django.conf import settings
@@ -7,7 +8,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError, transaction
-from django.db.models import F
 from django.utils import timezone
 from rest_framework.response import Response
 from api.serializers.trip import (
@@ -21,11 +21,12 @@ from api.serializers.passenger_trip import (
     Passenger_TripSerializer,
     ViewPassenger_TripReduceSerializer,
 )
-from api.models import Trip, Passenger_Trip
+from api.models import Trip, Passenger_Trip, Device
 from api.permissions import IsPassenger
 from api import error_messages
 from api.schemas import passenger_schemas
 from api.utils import point_inside_polygon, univalle, distance, convert_to_decimal_list
+from .notification import send_new_reservation
 
 
 # Obtener viaje asociado
@@ -104,12 +105,26 @@ def book_trip(request):
     passenger_trip_data = request.data
     '''El pasajero debe ser el mismo usuario que realiza la petición.'''
     passenger_trip_data['passenger'] = user.id_user
+    passenger_trip_data['is_confirmed'] = False
 
     passenger_trip = Passenger_TripSerializer(data=passenger_trip_data)
 
     if passenger_trip.is_valid():
         try:
-            passenger_trip.save()
+            with transaction.atomic():
+                passenger_trip.save()
+
+                # Enviar notificación al conductor.
+                id_trip = passenger_trip_data['trip']
+                devices = Device.objects.filter(user__trip=id_trip).values_list(
+                    'id_device', flat=True
+                )
+
+                if devices:
+                    transaction.on_commit(
+                        partial(send_new_reservation, list(devices), id_trip)
+                    )
+
             return Response(passenger_trip.data, status=status.HTTP_201_CREATED)
 
         except IntegrityError:
@@ -269,7 +284,7 @@ def search_route(request):
             starting_point = convert_to_decimal_list(
                 item.starting_point_long, item.starting_point_lat
             )
-            
+
             # Comprueba si el origen del viaje es la universidad.
             if point_inside_polygon(starting_point, univalle):
                 trip = calculate_nearest_point(item, arrival_point_search)
