@@ -55,7 +55,4 @@ def distance(A, B):
 
 
 def convert_to_decimal_list(long, lat):
-    return [
-        Decimal(f'{long}'),
-        Decimal(f'{lat}'),
-    ]
+    return [Decimal(f'{long}'), Decimal(f'{lat}')]

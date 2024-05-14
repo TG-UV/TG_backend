@@ -290,7 +290,7 @@ def confirm_passenger_trip(request, id_passenger_trip):
                 ).values_list('id_device', flat=True)
 
                 transaction.on_commit(
-                    partial(send_trip_update, device, passenger_trip_query.trip_id)
+                    partial(send_trip_update, list(devices), passenger_trip_query.trip_id)
                 )
 
             return Response(status=status.HTTP_200_OK)

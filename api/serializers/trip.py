@@ -22,7 +22,37 @@ class TripSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ViewTripSerializer(serializers.ModelSerializer):
+class ViewTripReduceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trip
+        fields = (
+            'id_trip',
+            'start_date',
+            'start_time',
+            'starting_point',
+            'arrival_point',
+            'seats',
+            'fare',
+        )
+        read_only_fields = fields
+
+    starting_point = serializers.SerializerMethodField()
+    arrival_point = serializers.SerializerMethodField()
+
+    def get_starting_point(self, obj):
+        return {
+            'lat': obj.starting_point_lat,
+            'long': obj.starting_point_long,
+        }
+
+    def get_arrival_point(self, obj):
+        return {
+            'lat': obj.arrival_point_lat,
+            'long': obj.arrival_point_long,
+        }
+
+
+class ViewTripSerializer(ViewTripReduceSerializer):
     class Meta:
         model = Trip
         fields = (
@@ -39,22 +69,8 @@ class ViewTripSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
-    starting_point = serializers.SerializerMethodField()
-    arrival_point = serializers.SerializerMethodField()
     driver = ViewUserReduceSerializer()
     vehicle = ViewVehicleReduceSerializer()
-
-    def get_starting_point(self, obj):
-        return {
-            'lat': obj.starting_point_lat,
-            'long': obj.starting_point_long,
-        }
-
-    def get_arrival_point(self, obj):
-        return {
-            'lat': obj.arrival_point_lat,
-            'long': obj.arrival_point_long,
-        }
 
 
 class ViewTripMinimalSerializer(ViewTripSerializer):

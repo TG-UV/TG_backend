@@ -98,6 +98,9 @@ class TripManager(models.Manager):
             .order_by('start_time')
         )  # gte significa greater than equal.
 
+    def get_trip(self, id_trip):
+        return self.base_query().get(id_trip=id_trip)
+
     def get_trip_with_driver_and_vehicle(self, id_trip):
         return self.trip_with_driver_and_vehicle_query().get(id_trip=id_trip)
 
