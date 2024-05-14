@@ -7,8 +7,8 @@ from firebase_admin import credentials, messaging
 from api.serializers.trip import ViewTripReduceSerializer
 from api.models import Trip
 
+# Configurar app de Firebase
 certificate = json.loads(settings.FIREBASE_JSON)
-
 cred = credentials.Certificate(certificate)
 firebase_admin.initialize_app(cred)
 
@@ -43,9 +43,10 @@ def send_notification_to_devices(device_tokens, notification, data):
     )
 
     response = messaging.send_multicast(message)
-    # See the BatchResponse reference documentation
-    # for the contents of response.
     print('{0} messages were sent successfully'.format(response.success_count))
+    print(device_tokens)
+    print(notification)
+    print(data)
 
 
 def send_reservation_rejected(device_token):
@@ -69,9 +70,7 @@ default_trip_update_notification = {
 
 
 # Novedades en un viaje
-def send_trip_update(
-    device_tokens, id_trip, notification=default_trip_update_notification
-):
+def send_trip_update(device_tokens, id_trip, notification):
 
     trip = Trip.objects.get_trip(id_trip)
     trip_serializer = ViewTripReduceSerializer(trip)
@@ -80,10 +79,6 @@ def send_trip_update(
         'notification_type': 'travel_notification',
         'additional_info': json.dumps(trip_serializer.data, default=custom_encoder),
     }
-
-    print(device_tokens)
-    print(notification)
-    print(data)
 
     send_notification_to_devices(device_tokens, notification, data)
 

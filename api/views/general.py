@@ -3,7 +3,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
-from django.db import IntegrityError, transaction
+from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from api.serializers.user import ViewUserSerializer
 from api.serializers.device import DeviceSerializer
@@ -54,17 +55,15 @@ class CustomLogin(TokenCreateView):
     def add_device(self, auth_token):
         try:
             token = Token.objects.only('user_id').get(key=auth_token)
-            device_data = {'id_device': self.id_device, 'user': token.user_id}
 
-            device = DeviceSerializer(data=device_data)
-
-            if device.is_valid():
-                device.save()
+            # Si ya existe el id del dispositivo se reemplaza el usuario
+            # asociado a ese dispositivo por el usuario que ha iniciado sesión.
+            _, _ = Device.objects.update_or_create(
+                id_device=self.id_device,
+                defaults={"user_id": token.user_id, "created": timezone.now()},
+            )
 
         except Token.DoesNotExist:
-            return
-
-        except IntegrityError:
             return
 
 
