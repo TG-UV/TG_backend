@@ -16,13 +16,14 @@ from api.serializers.trip import (
     TripSerializer,
     planned_trips_serializer,
     trip_reduce_serializer,
+    ViewTripReduceSerializer,
 )
 from api.serializers.passenger_trip import ViewPassenger_TripSerializer
 from api.models import Vehicle, Trip, Passenger_Trip, Device
 from api.permissions import IsDriver
 from api import error_messages
 from api.schemas import driver_schemas
-from .notification import send_trip_update
+from .notification import send_trip_canceled, send_reservation_accepted
 
 
 # Añadir vehículo
@@ -233,8 +234,24 @@ def get_current_trip(request):
 def delete_trip(request, id_trip):
     user = request.user
     try:
-        trip = Trip.objects.only('id_trip').get(id_trip=id_trip, driver=user.id_user)
-        trip.delete()
+        with transaction.atomic():
+
+            trip = Trip.objects.get_my_trip(id_trip, driver=user.id_user)
+            trip_serializer = ViewTripReduceSerializer(trip).data
+
+            # Enviar notificación a los pasajeros.
+            devices = Device.objects.filter(
+                user__passenger_trip__trip_id=id_trip
+            ).values_list('id_device', flat=True)
+            devices = list(devices)
+
+            trip.delete()
+
+            if devices:
+                transaction.on_commit(
+                    partial(send_trip_canceled, devices, trip_serializer)
+                )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     except Trip.DoesNotExist:
@@ -281,17 +298,20 @@ def confirm_passenger_trip(request, id_passenger_trip):
                 passenger_trip.is_confirmed = True
                 passenger_trip.save(update_fields=['is_confirmed'])
 
+                # Enviar notificación al pasajero.
                 devices = Device.objects.filter(
-                    user__passenger_trip__trip=passenger_trip_query.trip_id  # 19
+                    user__passenger_trip=id_passenger_trip
                 ).values_list('id_device', flat=True)
+                devices = list(devices)
 
-                device = Device.objects.filter(
-                    user__passenger_trip=id_passenger_trip  # 19
-                ).values_list('id_device', flat=True)
-
-                transaction.on_commit(
-                    partial(send_trip_update, list(devices), passenger_trip_query.trip_id)
-                )
+                if devices:
+                    transaction.on_commit(
+                        partial(
+                            send_reservation_accepted,
+                            devices,
+                            passenger_trip_query.trip_id,
+                        )
+                    )
 
             return Response(status=status.HTTP_200_OK)
 
