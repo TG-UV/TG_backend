@@ -52,3 +52,10 @@ def distance(A, B):
     suma = x_distance + y_distance
     distance = suma.sqrt()
     return distance
+
+
+def convert_to_decimal_list(long, lat):
+    return [
+        Decimal(f'{long}'),
+        Decimal(f'{lat}'),
+    ]

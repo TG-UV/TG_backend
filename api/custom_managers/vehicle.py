@@ -18,8 +18,11 @@ class VehicleManager(models.Manager):
             'license_plate',
         )
 
-    def get_vehicle(self, id_vehicle, owner):
+    def get_my_vehicle(self, id_vehicle, owner):
         return self.base_query().get(id_vehicle=id_vehicle, owner=owner)
 
     def get_my_vehicles(self, owner):
         return self.base_query().filter(owner=owner).order_by('license_plate')
+
+    def get_vehicle(self, id_vehicle):
+        return self.base_query().get(id_vehicle=id_vehicle)

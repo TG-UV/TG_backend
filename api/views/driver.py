@@ -5,7 +5,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from drf_spectacular.utils import extend_schema
 from django.db import IntegrityError, transaction
-from django.db.models import F
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework.response import Response
@@ -58,7 +57,7 @@ def add_vehicle(request):
 def get_vehicle(request, id_vehicle):
     user = request.user
     try:
-        vehicle = Vehicle.objects.get_vehicle(id_vehicle, user.id_user)
+        vehicle = Vehicle.objects.get_my_vehicle(id_vehicle, user.id_user)
         serializer = ViewVehicleSerializer(vehicle)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -183,32 +182,34 @@ def get_trip(request, id_trip):
         )
 
 
+# Obtener viajes de un queryset dado
+def get_trips(request, queryset, serializer):
+    user = request.user
+    current_datetime = timezone.now()
+    queryset = queryset(current_datetime, user.id_user)
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_results = paginator.paginate_queryset(queryset, request)
+    content = [serializer(item) for item in paginated_results]
+    return paginator.get_paginated_response(content)
+
+
 # Obtener historial de viajes
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_trip_history(request):
-    user = request.user
-    current_datetime = timezone.now()
-    queryset = Trip.objects.get_trip_history(current_datetime, user.id_user)
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-    paginated_results = paginator.paginate_queryset(queryset, request)
-    content = [trip_reduce_serializer(item) for item in paginated_results]
-    return paginator.get_paginated_response(content)
+    queryset = Trip.objects.get_trip_history
+    serializer = trip_reduce_serializer
+    return get_trips(request, queryset, serializer)
 
 
 # Obtener viajes planeados
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_planned_trips(request):
-    user = request.user
-    current_datetime = timezone.now()
-    queryset = Trip.objects.get_planned_trips(current_datetime, user.id_user)
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-    paginated_results = paginator.paginate_queryset(queryset, request)
-    content = [planned_trips_serializer(item) for item in paginated_results]
-    return paginator.get_paginated_response(content)
+    queryset = Trip.objects.get_planned_trips
+    serializer = planned_trips_serializer
+    return get_trips(request, queryset, serializer)
 
 
 # Obtener viaje actual
