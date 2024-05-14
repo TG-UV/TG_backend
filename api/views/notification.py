@@ -49,26 +49,6 @@ def send_notification_to_devices(device_tokens, notification, data):
     print(data)
 
 
-def send_reservation_rejected(device_token):
-    notification = {
-        'title': 'Cupo rechazado',
-        'body': 'Lastimosamente el conductor no puede llevarte',
-    }
-
-    data = {
-        'notification_type': 'travel_deny',
-        'additional_info': '',
-    }
-
-    send_notification_to_device(device_token, notification, data)
-
-
-default_trip_update_notification = {
-    'title': 'Novedad en tu viaje',
-    'body': 'Revisa las actualizaciones del viaje ',
-}
-
-
 # Novedades en un viaje
 def send_trip_update(device_tokens, id_trip, notification):
 
@@ -104,6 +84,7 @@ def send_reservation_canceled(device_tokens, id_trip):
 
     send_trip_update(device_tokens, id_trip, notification)
 
+
 # El conductor acepta la reserva de un pasajero
 def send_reservation_accepted(device_tokens, id_trip):
 
@@ -113,6 +94,24 @@ def send_reservation_accepted(device_tokens, id_trip):
     }
 
     send_trip_update(device_tokens, id_trip, notification)
+
+
+# El conductor rechaza la reserva de un pasajero
+def send_reservation_rejected(device_tokens, id_trip):
+    notification = {
+        'title': 'Cupo rechazado',
+        'body': 'Lastimosamente el conductor no puede llevarte',
+    }
+
+    trip = Trip.objects.get_trip(id_trip)
+    trip_serializer = ViewTripReduceSerializer(trip)
+
+    data = {
+        'notification_type': 'travel_deny',
+        'additional_info': json.dumps(trip_serializer.data, default=custom_encoder),
+    }
+
+    send_notification_to_devices(device_tokens, notification, data)
 
 
 # El conductor ha cancelado el viaje
