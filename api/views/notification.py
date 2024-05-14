@@ -88,7 +88,17 @@ def send_new_reservation(device_tokens, id_trip):
 
     notification = {
         'title': 'Solicitud de cupo',
-        'body': 'Un pasajero ha solicitado cupo en uno de tus viajes. Acepta o rechaza la solicitud.',
+        'body': 'Un pasajero ha solicitado cupo en uno de tus viajes',
+    }
+
+    send_trip_update(device_tokens, id_trip, notification)
+
+# Un pasajero ha cancelado la reserva
+def send_canceled_reservation(device_tokens, id_trip):
+
+    notification = {
+        'title': 'Solicitud de cupo cancelada',
+        'body': 'Un pasajero ha cancelado la solicitud de cupo en uno de tus viajes',
     }
 
     send_trip_update(device_tokens, id_trip, notification)
