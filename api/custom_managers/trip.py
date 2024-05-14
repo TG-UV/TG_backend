@@ -100,6 +100,9 @@ class TripManager(models.Manager):
 
     def get_trip(self, id_trip):
         return self.base_query().get(id_trip=id_trip)
+    
+    def get_my_trip(self, id_trip, driver):
+        return self.base_query().get(id_trip=id_trip, driver=driver)
 
     def get_trip_with_driver_and_vehicle(self, id_trip):
         return self.trip_with_driver_and_vehicle_query().get(id_trip=id_trip)

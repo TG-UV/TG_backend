@@ -7,7 +7,6 @@ from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from api.serializers.user import ViewUserSerializer
-from api.serializers.device import DeviceSerializer
 from api.models import User, Device
 from api.schemas import general_schemas
 from djoser.views import UserViewSet, TokenCreateView, TokenDestroyView

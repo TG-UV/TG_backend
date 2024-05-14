@@ -26,7 +26,7 @@ from api.permissions import IsPassenger
 from api import error_messages
 from api.schemas import passenger_schemas
 from api.utils import point_inside_polygon, univalle, distance, convert_to_decimal_list
-from .notification import send_new_reservation, send_canceled_reservation
+from .notification import send_new_reservation, send_reservation_canceled
 
 
 # Obtener viaje asociado
@@ -120,9 +120,11 @@ def book_trip(request):
                     'id_device', flat=True
                 )
 
+                devices = list(devices)
+
                 if devices:
                     transaction.on_commit(
-                        partial(send_new_reservation, list(devices), id_trip)
+                        partial(send_new_reservation, devices, id_trip)
                     )
 
             return Response(passenger_trip.data, status=status.HTTP_201_CREATED)
@@ -161,10 +163,11 @@ def delete_trip_reservation(request, id_trip):
             devices = Device.objects.filter(user__trip=id_trip).values_list(
                 'id_device', flat=True
             )
+            devices = list(devices)
 
             if devices:
                 transaction.on_commit(
-                    partial(send_canceled_reservation, list(devices), id_trip)
+                    partial(send_reservation_canceled, devices, id_trip)
                 )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
