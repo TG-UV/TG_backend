@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from api.custom_validators import validate_vehicle_owner
 from api.models import Trip
+from .vehicle import ViewVehicleReduceSerializer
 from .user import ViewUserReduceSerializer
 from typing import Dict, Any
 
@@ -41,6 +42,7 @@ class ViewTripSerializer(serializers.ModelSerializer):
     starting_point = serializers.SerializerMethodField()
     arrival_point = serializers.SerializerMethodField()
     driver = ViewUserReduceSerializer()
+    vehicle = ViewVehicleReduceSerializer()
 
     def get_starting_point(self, obj):
         return {
@@ -55,7 +57,7 @@ class ViewTripSerializer(serializers.ModelSerializer):
         }
 
 
-class ViewTripMinimalSerializer(serializers.ModelSerializer):
+class ViewTripMinimalSerializer(ViewTripSerializer):
     class Meta:
         model = Trip
         fields = (
@@ -63,8 +65,6 @@ class ViewTripMinimalSerializer(serializers.ModelSerializer):
             'vehicle',
         )
         read_only_fields = fields
-
-    driver = ViewUserReduceSerializer()
 
 
 class TripSearchSerializer(serializers.ModelSerializer):
