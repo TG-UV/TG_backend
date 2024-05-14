@@ -23,7 +23,11 @@ from api.models import Vehicle, Trip, Passenger_Trip, Device
 from api.permissions import IsDriver
 from api import error_messages
 from api.schemas import driver_schemas
-from .notification import send_trip_canceled, send_reservation_accepted
+from .notification import (
+    send_trip_canceled,
+    send_reservation_accepted,
+    send_reservation_rejected,
+)
 
 
 # Añadir vehículo
@@ -350,7 +354,22 @@ def delete_passenger_trip(request, id_passenger_trip):
                 trip.seats += passenger_trip.seats
                 trip.save(update_fields=['seats'])
 
+            # Enviar notificación al pasajero.
+            devices = Device.objects.filter(
+                user__passenger_trip=id_passenger_trip
+            ).values_list('id_device', flat=True)
+            devices = list(devices)
+
             passenger_trip.delete()
+
+            if devices:
+                transaction.on_commit(
+                    partial(
+                        send_reservation_rejected,
+                        devices,
+                        trip.id_trip,
+                    )
+                )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
