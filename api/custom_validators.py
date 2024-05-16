@@ -71,11 +71,7 @@ def validate_vehicle_owner(driver, vehicle):
 
 def validate_email_domain(email):
     if not email.endswith(ALLOWED_EMAIL_DOMAIN):
-        raise ValidationError(
-            {
-                'new_email': error_messages.EMAIL_DOMAIN_NOT_ALLOWED,
-            }
-        )
+        raise ValidationError({'new_email': error_messages.EMAIL_DOMAIN_NOT_ALLOWED})
 
 
 def validate_latitude(latitude):
@@ -92,3 +88,14 @@ def validate_license_plate(license_plate):
     pattern = r'^[A-Za-z]{3}-\d{3}$'
     if not re.match(pattern, license_plate):
         raise ValidationError(error_messages.INVALID_LICENSE_PLATE)
+
+
+def validate_start_datetime(start_datetime):
+    current_datetime = timezone.now()
+    if start_datetime < current_datetime:
+        raise ValidationError(
+            {
+                "start_date": [error_messages.INVALID_DATETIME],
+                "start_time": [error_messages.INVALID_DATETIME],
+            }
+        )
