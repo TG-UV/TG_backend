@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from api.custom_validators import validate_vehicle_owner
+from api.custom_validators import validate_vehicle_owner, validate_start_datetime
 from api.models import Trip
 from .vehicle import ViewVehicleReduceSerializer
 from .user import ViewUserReduceSerializer
 from typing import Dict, Any
+from datetime import datetime
 
 
 class TripSerializer(serializers.ModelSerializer):
@@ -15,9 +16,15 @@ class TripSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         driver = attrs.get('driver', None)
         vehicle = attrs.get('vehicle', None)
+        start_date = attrs.get('start_date', None)
+        start_time = attrs.get('start_time', None)
 
         if driver and vehicle:
             validate_vehicle_owner(driver, vehicle)
+
+        if start_date and start_time:
+            start_datetime = datetime.combine(start_date, start_time)
+            validate_start_datetime(start_datetime)
 
         return attrs
 

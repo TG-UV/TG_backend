@@ -1,6 +1,7 @@
 EMAIL_DOMAIN_NOT_ALLOWED = 'El dominio del correo debe ser correounivalle.edu.co.'
 EMAIL_MUST_BE_IN_LOWERCASE = 'El correo debe estar en minúsculas.'
 INVALID_DATE_OF_BIRTH = 'La fecha de nacimiento no puede ser mayor que la fecha actual.'
+INVALID_DATETIME = 'Ya ha pasado la combinación de fecha y hora ingresada.'
 INVALID_IDENTITY_DOCUMENT = 'El documento de identidad es inválido. Solo escriba números. No añada puntos ni espacios.'
 INVALID_LATITUDE = 'La latitud debe estar entre -90 y 90.'
 INVALID_LICENSE_PLATE = 'La placa debe tener tres letras seguidas de un guion y tres números, por ej. ABC-123.'
