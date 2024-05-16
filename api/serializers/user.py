@@ -72,7 +72,6 @@ class ExtendedUserSerializer(UserSerializer):
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-
     def validate(self, attrs):
         email = attrs['email']
         user_type = attrs['type']
@@ -97,7 +96,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
-
     class Meta:
         model = User
         fields = (

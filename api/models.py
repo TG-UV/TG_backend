@@ -13,6 +13,7 @@ from .custom_validators import (
     validate_fare,
     validate_latitude,
     validate_longitude,
+    validate_license_plate,
 )
 
 from .custom_managers.passenger_trip import Passenger_TripManager
@@ -31,7 +32,7 @@ class UserType(models.Model):
 
 class City(models.Model):
     id_city = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.name
@@ -44,15 +45,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=10, validators=[validate_identity_document]
     )
     phone_number = models.CharField(max_length=10, validators=[validate_phone_number])
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
     date_of_birth = models.DateField(validators=[validate_date_of_birth])
     registration_date = models.DateTimeField(auto_now_add=True)
     residence_city = models.ForeignKey(City, on_delete=models.CASCADE)
     type = models.ForeignKey(UserType, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -78,7 +78,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class VehicleColor(models.Model):
     id_vehicle_color = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.name
@@ -86,7 +86,7 @@ class VehicleColor(models.Model):
 
 class VehicleBrand(models.Model):
     id_vehicle_brand = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.name
@@ -94,7 +94,7 @@ class VehicleBrand(models.Model):
 
 class VehicleType(models.Model):
     id_vehicle_type = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.name
@@ -102,7 +102,7 @@ class VehicleType(models.Model):
 
 class VehicleModel(models.Model):
     id_vehicle_model = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=4, unique=True)
 
     def __str__(self):
         return self.name
@@ -114,7 +114,7 @@ class Vehicle(models.Model):
     vehicle_brand = models.ForeignKey(VehicleBrand, on_delete=models.CASCADE)
     vehicle_model = models.ForeignKey(VehicleModel, on_delete=models.CASCADE)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE)
-    license_plate = models.CharField(max_length=10)
+    license_plate = models.CharField(max_length=7, validators=[validate_license_plate])
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     objects = VehicleManager()
@@ -162,13 +162,13 @@ class Trip(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['start_date', 'start_time', 'driver'], name='start_datetime_driver_unique'
+                fields=['start_date', 'start_time', 'driver'],
+                name='start_datetime_driver_unique',
             )  # Valida que un conductor no cree varios viajes con la misma fecha y hora.
         ]
 
     def __str__(self):
         return f"Trip #{self.id_trip}"
-
 
 
 class Passenger_Trip(models.Model):
