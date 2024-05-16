@@ -51,7 +51,6 @@ def send_notification_to_devices(device_tokens, notification, data):
 
 # Novedades en un viaje
 def send_trip_update(device_tokens, id_trip, notification):
-
     trip = Trip.objects.get_trip(id_trip)
     trip_serializer = ViewTripReduceSerializer(trip)
 
@@ -65,7 +64,6 @@ def send_trip_update(device_tokens, id_trip, notification):
 
 # Un pasajero ha reservado
 def send_new_reservation(device_tokens, id_trip):
-
     notification = {
         'title': 'Solicitud de cupo',
         'body': 'Un pasajero ha solicitado cupo en uno de tus viajes',
@@ -76,7 +74,6 @@ def send_new_reservation(device_tokens, id_trip):
 
 # Un pasajero ha cancelado la reserva
 def send_reservation_canceled(device_tokens, id_trip):
-
     notification = {
         'title': 'Solicitud de cupo cancelada',
         'body': 'Un pasajero ha cancelado la solicitud de cupo en uno de tus viajes',
@@ -87,7 +84,6 @@ def send_reservation_canceled(device_tokens, id_trip):
 
 # El conductor acepta la reserva de un pasajero
 def send_reservation_accepted(device_tokens, id_trip):
-
     notification = {
         'title': 'Cupo confirmado',
         'body': '¡El conductor ha aceptado llevarte!',
@@ -116,7 +112,6 @@ def send_reservation_rejected(device_tokens, id_trip):
 
 # El conductor ha cancelado el viaje
 def send_trip_canceled(device_tokens, trip_dict):
-
     notification = {
         'title': 'Viaje cancelado',
         'body': 'Lastimosamente el conductor ha cancelado el viaje',

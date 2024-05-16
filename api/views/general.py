@@ -33,7 +33,6 @@ class CustomUserViewSet(UserViewSet):
 
 # Iniciar sesión
 class CustomLogin(TokenCreateView):
-
     def __init__(self):
         self.id_device = None
 
@@ -56,7 +55,7 @@ class CustomLogin(TokenCreateView):
             token = Token.objects.only('user_id').get(key=auth_token)
 
             # Si ya existe el id del dispositivo se reemplaza el usuario
-            # asociado a ese dispositivo por el usuario que ha iniciado sesión.
+            # asociado a ese dispositivo por el que ha iniciado sesión.
             _, _ = Device.objects.update_or_create(
                 id_device=self.id_device,
                 defaults={"user_id": token.user_id, "created": timezone.now()},
@@ -71,7 +70,7 @@ class CustomLogout(TokenDestroyView):
     def post(self, request):
         user = request.user
         with transaction.atomic():
-            Device.objects.filter(user=user.id_user).delete()
+            _, _ = Device.objects.filter(user=user.id_user).delete()
             return super().post(request)
 
 

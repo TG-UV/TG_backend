@@ -1,3 +1,4 @@
+import re
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from api import error_messages
@@ -85,3 +86,9 @@ def validate_latitude(latitude):
 def validate_longitude(longitude):
     if longitude > Decimal('180.000000') or longitude < Decimal('-180.000000'):
         raise ValidationError(error_messages.INVALID_LONGITUDE)
+
+
+def validate_license_plate(license_plate):
+    pattern = r'^[A-Za-z]{3}-\d{3}$'
+    if not re.match(pattern, license_plate):
+        raise ValidationError(error_messages.INVALID_LICENSE_PLATE)
