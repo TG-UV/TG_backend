@@ -66,7 +66,7 @@ get_vehicle_schema = {
                 "vehicle_brand": "Mercedes",
                 "vehicle_model": "2024",
                 "vehicle_color": "Negro",
-                "license_plate": "ABC321",
+                "license_plate": "ABC-321",
             },
             description='En este ejemplo el id de la url es 14: .../driver/vehicle/14/.',
         ),
@@ -88,7 +88,7 @@ get_my_vehicles_schema = {
                     "vehicle_brand": "Mercedes",
                     "vehicle_model": "2020",
                     "vehicle_color": "Negro",
-                    "license_plate": "ABC123",
+                    "license_plate": "ABC-123",
                 },
                 {
                     "id_vehicle": 2,
@@ -96,7 +96,7 @@ get_my_vehicles_schema = {
                     "vehicle_brand": "Mazda",
                     "vehicle_model": "2024",
                     "vehicle_color": "Gris",
-                    "license_plate": "BC123",
+                    "license_plate": "BCD-123",
                 },
             ],
             description='En este ejemplo el usuario ha registrado 2 vehículos. Se cambian'
@@ -111,7 +111,7 @@ get_my_vehicles_schema = {
                     "vehicle_brand": "Mercedes",
                     "vehicle_model": "2020",
                     "vehicle_color": "Negro",
-                    "license_plate": "BC123",
+                    "license_plate": "BCD-123",
                 },
             ],
             description='En este ejemplo el usuario solo ha registrado 1 vehículo.',
@@ -141,7 +141,7 @@ update_vehicle_schema = {
         OpenApiExample(
             "Update vehicle PUT request",
             value={
-                "license_plate": "ABC123",
+                "license_plate": "ABC-123",
                 "vehicle_type": 1,
                 "vehicle_brand": 1,
                 "vehicle_model": 1,
@@ -152,7 +152,7 @@ update_vehicle_schema = {
         OpenApiExample(
             "Update vehicle PATCH request",
             value={
-                "license_plate": "ABC123",
+                "license_plate": "ABC-123",
             },
             request_only=True,
         ),
@@ -160,7 +160,7 @@ update_vehicle_schema = {
             "Update vehicle response",
             value={
                 "id_vehicle": 2,
-                "license_plate": "ABC123",
+                "license_plate": "ABC-123",
                 "vehicle_type": 1,
                 "vehicle_brand": 1,
                 "vehicle_model": 1,
