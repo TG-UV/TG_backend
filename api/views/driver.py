@@ -241,7 +241,7 @@ def delete_trip(request, id_trip):
         with transaction.atomic():
 
             trip = Trip.objects.get_my_trip(id_trip, driver=user.id_user)
-            trip_serializer = ViewTripReduceSerializer(trip).data
+            trip_data = ViewTripReduceSerializer(trip).data
 
             # Enviar notificación a los pasajeros.
             devices = Device.objects.filter(
@@ -253,7 +253,7 @@ def delete_trip(request, id_trip):
 
             if devices:
                 transaction.on_commit(
-                    partial(send_trip_canceled, devices, trip_serializer)
+                    partial(send_trip_canceled, devices, trip_data)
                 )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -342,6 +342,7 @@ def delete_passenger_trip(request, id_passenger_trip):
         passenger_trip = Passenger_Trip.objects.get_data_to_delete_reservation(
             id_passenger_trip, user.id_user
         )
+        id_trip = passenger_trip.trip_id
 
         with transaction.atomic():
             # Si la reserva ya estaba confirmada se restablecen los puestos separados.
@@ -349,7 +350,7 @@ def delete_passenger_trip(request, id_passenger_trip):
                 trip = (
                     Trip.objects.select_for_update()
                     .only('seats')
-                    .get(id_trip=passenger_trip.trip_id)
+                    .get(id_trip=id_trip)
                 )
                 trip.seats += passenger_trip.seats
                 trip.save(update_fields=['seats'])
@@ -367,7 +368,7 @@ def delete_passenger_trip(request, id_passenger_trip):
                     partial(
                         send_reservation_rejected,
                         devices,
-                        trip.id_trip,
+                        id_trip,
                     )
                 )
 

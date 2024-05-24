@@ -81,7 +81,7 @@ class UserTestCase(BaseTestCase):
             'phone_number': self.user.phone_number,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
-            'date_of_birth': str(self.user.date_of_birth),
+            'date_of_birth': self.user.date_of_birth,
             'residence_city': self.user.residence_city.name,
             'type': self.user.type.name,
             'is_active': self.user.is_active,
