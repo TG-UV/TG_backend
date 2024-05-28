@@ -122,10 +122,7 @@ get_my_vehicles_schema = {
 delete_vehicle_schema = {
     'description': 'Vista para eliminar un vehículo registrado por un usuario (requiere token).',
     'responses': {
-        204: inline_serializer(
-            name="VehicleDeleted",
-            fields={},
-        ),
+        204: {},
     },
 }
 
@@ -222,10 +219,7 @@ add_trip_schema = {
 delete_trip_schema = {
     'description': 'Vista para eliminar un viaje (requiere token).',
     'responses': {
-        204: inline_serializer(
-            name="TripDeleted",
-            fields={},
-        ),
+        204: {},
     },
 }
 
@@ -282,10 +276,11 @@ get_trip_schema = {
 
 delete_passenger_trip_schema = {
     'description': 'Vista para descartar una reserva hecha por un pasajero (requiere token).',
-    'responses': {
-        204: inline_serializer(
-            name="Passenger_TripDeleted",
-            fields={},
-        ),
-    },
+    'responses': {204: {}},
+}
+
+confirm_passenger_trip_schema = {
+    'description': 'Vista para confirmar una reserva hecha por un pasajero (requiere token).',
+    'request': {},
+    'responses': {200: {}},
 }

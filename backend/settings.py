@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from api.schemas.spectacular_settings_schema import spectacular_settings_schema
 
 load_dotenv()
 
@@ -160,14 +161,7 @@ DJOSER = {
     },
 }
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'API RAYO',
-    'DESCRIPTION': 'Aplicación de viajes compartidos universitarios.',
-    'VERSION': '1.0.0',
-    'CONTACT': {
-        'name': 'Rayo',
-    },
-}
+SPECTACULAR_SETTINGS = spectacular_settings_schema
 
 MAPBOX_KEY = os.environ.get('MAPBOX_KEY')
 

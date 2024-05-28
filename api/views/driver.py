@@ -266,7 +266,7 @@ def delete_trip(request, id_trip):
 
 
 # Confirmar reserva hecha por un pasajero
-# @extend_schema(**driver_schemas.delete_passenger_trip_schema)
+@extend_schema(**driver_schemas.confirm_passenger_trip_schema)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsDriver])
 def confirm_passenger_trip(request, id_passenger_trip):
