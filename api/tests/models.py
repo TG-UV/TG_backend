@@ -22,8 +22,8 @@ class BaseTestCase(TestCase):
     """
     Pruebas para probar la creación y consulta de objetos de cada modelo.
     Sirven para comprobar si los objetos se comportan de acuerdo a lo esperado,
-    si se aplican los formatos a los campos antes de guardar y se obtienen los
-    tipos de datos definidos al crear los modelos.
+    si se aplican los formatos a los campos antes de guardar y si se obtienen 
+    los tipos de datos definidos al crear los modelos.
     """
 
     def setUp(self):
