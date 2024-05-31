@@ -85,7 +85,7 @@ def validate_longitude(longitude):
 
 
 def validate_license_plate(license_plate):
-    pattern = r'^[A-Za-z]{3}-\d{3}$'
+    pattern = r'^[A-Za-z]{3}-(\d{3}|\d{2}[A-Za-z])$'
     if not re.match(pattern, license_plate):
         raise ValidationError(error_messages.INVALID_LICENSE_PLATE)
 
