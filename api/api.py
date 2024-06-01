@@ -41,7 +41,7 @@ class CityViewSet(viewsets.ModelViewSet):
 
 class ExtendedUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsAdmin]
     serializer_class = ExtendedUserSerializer
 
 
@@ -71,7 +71,7 @@ class VehicleModelViewSet(viewsets.ModelViewSet):
 
 class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [AllowAny]
     serializer_class = VehicleSerializer
 
 
